@@ -48,6 +48,8 @@ import (
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/podchaos/podkill"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/stresschaos"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/timechaos"
+	_ "github.com/chaos-mesh/chaos-mesh/controllers/helloworldchaos"
+
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
