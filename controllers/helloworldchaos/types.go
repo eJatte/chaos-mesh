@@ -22,13 +22,22 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	e.Log.Info("Ostpojke")
 	var p int32 = 3
 	var user int64 = 0
-	var selectorMap map[string]string
-	selectorMap = make(map[string]string)
-	selectorMap["matchLabels"] = "app: hello-kubernetes"
 
 	var labelMap map[string]string
 	labelMap = make(map[string]string)
 	labelMap["app"] = "hello-kubernetes"
+
+	var labelSelector = metav1.LabelSelector{
+		MatchLabels:      labelMap,
+		MatchExpressions: nil,
+	}
+
+	var selectorMap, err = metav1.LabelSelectorAsMap(&labelSelector)
+
+	if err != nil {
+		e.Log.Error(err, "Failed to create map from label selector")
+		return err
+	}
 
 	replicationController := v1.ReplicationController{
 		TypeMeta: metav1.TypeMeta{
@@ -36,7 +45,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "hello-kubernetes",
+			Name:      "hello-kubernetes",
 			Namespace: "chaos-testing",
 		},
 		Spec: v1.ReplicationControllerSpec{
@@ -65,7 +74,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			},
 		},
 	}
-	err := e.Create(ctx, &replicationController)
+	err = e.Create(ctx, &replicationController)
 	if err != nil {
 		e.Log.Error(err, "Failed to create replication controller")
 		return err
