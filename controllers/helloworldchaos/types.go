@@ -2,8 +2,12 @@ package helloworldchaos
 
 import (
 	"context"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"fmt"
+	"github.com/chaos-mesh/chaos-mesh/controllers/config"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/client"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -11,6 +15,8 @@ import (
 	"github.com/chaos-mesh/chaos-mesh/pkg/router"
 	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
 	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
+
+	"errors"
 )
 
 type endpoint struct {
@@ -18,9 +24,44 @@ type endpoint struct {
 }
 
 func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.InnerObject) error {
-	e.Log.Info("Hello World!")
-	e.Log.Info("Ostpojke")
-	var p int32 = 3
+
+	e.Log.Info("Apply helloworld chaos")
+	helloworldchaos, ok := chaos.(*v1alpha1.HelloWorldChaos)
+	if !ok {
+		return errors.New("chaos is not helloworldchaos")
+	}
+
+	e.Log.Info("Select and filter pods")
+	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &helloworldchaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
+	if err != nil {
+		e.Log.Error(err, "failed to select and filter pods")
+		return err
+	}
+
+	for _, pod := range pods {
+		e.Log.Info("New chaos daemon client")
+		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
+		if err != nil {
+			e.Log.Error(err, "get chaos daemon client")
+			return err
+		}
+		defer daemonClient.Close()
+		if len(pod.Status.ContainerStatuses) == 0 {
+			return fmt.Errorf("%s %s can't get the state of container", pod.Namespace, pod.Name)
+		}
+
+		containerID := pod.Status.ContainerStatuses[0].ContainerID
+		e.Log.Info("Exec hello world chaos")
+		_, err = daemonClient.ExecHelloWorldChaos(ctx, &pb.ExecHelloWorldRequest{
+			ContainerId: containerID,
+		})
+		if err != nil {
+			e.Log.Error(err, "failed to exec hello world chaos")
+			return err
+		}
+	}
+
+	/*var p int32 = 3
 	var user int64 = 0
 
 	var labelMap map[string]string
@@ -32,7 +73,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		MatchExpressions: nil,
 	}
 
-	var selectorMap, err = metav1.LabelSelectorAsMap(&labelSelector)
+	selectorMap, err := metav1.LabelSelectorAsMap(&labelSelector)
 
 	if err != nil {
 		e.Log.Error(err, "Failed to create map from label selector")
@@ -78,14 +119,16 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	if err != nil {
 		e.Log.Error(err, "Failed to create replication controller")
 		return err
-	}
+	}*/
 	return nil
 }
 
+// Recover means the reconciler recovers the chaos action
 func (e *endpoint) Recover(ctx context.Context, req ctrl.Request, chaos v1alpha1.InnerObject) error {
 	return nil
 }
 
+// Object would return the instance of chaos
 func (e *endpoint) Object() v1alpha1.InnerObject {
 	return &v1alpha1.HelloWorldChaos{}
 }

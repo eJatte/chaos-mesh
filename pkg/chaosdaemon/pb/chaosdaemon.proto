@@ -23,6 +23,8 @@ service ChaosDaemon {
   rpc ApplyIoChaos(ApplyIoChaosRequest) returns (ApplyIoChaosResponse) {}
 
   rpc SetDNSServer (SetDNSServerRequest) returns (google.protobuf.Empty) {}
+
+  rpc ExecHelloWorldChaos(ExecHelloWorldRequest) returns (google.protobuf.Empty) {}
 }
 
 message TcHandle {
@@ -217,4 +219,8 @@ message SetDNSServerRequest {
   string dns_server = 2;
   bool enable = 3;
   bool enterNS = 4;
+}
+
+message ExecHelloWorldRequest {
+  string container_id = 1;
 }

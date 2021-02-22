@@ -1,0 +1,9 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HelloWorldChaos
+metadata:
+  name: busybox-helloworld-chaos
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - busybox

@@ -33,7 +33,7 @@ type NsType string
 const (
 	MountNS NsType = "mnt"
 	// uts namespace is not supported yet
-	// UtsNS   NsType = "uts"
+	//UtsNS   NsType = "uts"
 	IpcNS NsType = "ipc"
 	NetNS NsType = "net"
 	PidNS NsType = "pid"
