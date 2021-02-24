@@ -1082,6 +1082,124 @@ func (in *PodChaosList) ListChaos() []*ChaosInstance {
 	return res
 }
 
+const KindSecurityChaos = "SecurityChaos"
+
+// IsDeleted returns whether this resource has been deleted
+func (in *SecurityChaos) IsDeleted() bool {
+	return !in.DeletionTimestamp.IsZero()
+}
+
+// IsPaused returns whether this resource has been paused
+func (in *SecurityChaos) IsPaused() bool {
+	if in.Annotations == nil || in.Annotations[PauseAnnotationKey] != "true" {
+		return false
+	}
+	return true
+}
+
+// GetDuration would return the duration for chaos
+func (in *SecurityChaos) GetDuration() (*time.Duration, error) {
+	if in.Spec.Duration == nil {
+		return nil, nil
+	}
+	duration, err := time.ParseDuration(*in.Spec.Duration)
+	if err != nil {
+		return nil, err
+	}
+	return &duration, nil
+}
+
+func (in *SecurityChaos) GetNextStart() time.Time {
+	if in.Status.Scheduler.NextStart == nil {
+		return time.Time{}
+	}
+	return in.Status.Scheduler.NextStart.Time
+}
+
+func (in *SecurityChaos) SetNextStart(t time.Time) {
+	if t.IsZero() {
+		in.Status.Scheduler.NextStart = nil
+		return
+	}
+
+	if in.Status.Scheduler.NextStart == nil {
+		in.Status.Scheduler.NextStart = &metav1.Time{}
+	}
+	in.Status.Scheduler.NextStart.Time = t
+}
+
+func (in *SecurityChaos) GetNextRecover() time.Time {
+	if in.Status.Scheduler.NextRecover == nil {
+		return time.Time{}
+	}
+	return in.Status.Scheduler.NextRecover.Time
+}
+
+func (in *SecurityChaos) SetNextRecover(t time.Time) {
+	if t.IsZero() {
+		in.Status.Scheduler.NextRecover = nil
+		return
+	}
+
+	if in.Status.Scheduler.NextRecover == nil {
+		in.Status.Scheduler.NextRecover = &metav1.Time{}
+	}
+	in.Status.Scheduler.NextRecover.Time = t
+}
+
+// GetScheduler would return the scheduler for chaos
+func (in *SecurityChaos) GetScheduler() *SchedulerSpec {
+	return in.Spec.Scheduler
+}
+
+// GetChaos would return the a record for chaos
+func (in *SecurityChaos) GetChaos() *ChaosInstance {
+	instance := &ChaosInstance{
+		Name:      in.Name,
+		Namespace: in.Namespace,
+		Kind:      KindSecurityChaos,
+		StartTime: in.CreationTimestamp.Time,
+		Action:    "",
+		Status:    string(in.Status.Experiment.Phase),
+		UID:       string(in.UID),
+	}
+
+	action := reflect.ValueOf(in).Elem().FieldByName("Spec").FieldByName("Action")
+	if action.IsValid() {
+		instance.Action = action.String()
+	}
+	if in.Spec.Duration != nil {
+		instance.Duration = *in.Spec.Duration
+	}
+	if in.DeletionTimestamp != nil {
+		instance.EndTime = in.DeletionTimestamp.Time
+	}
+	return instance
+}
+
+// GetStatus returns the status
+func (in *SecurityChaos) GetStatus() *ChaosStatus {
+	return &in.Status.ChaosStatus
+}
+
+// +kubebuilder:object:root=true
+
+// SecurityChaosList contains a list of SecurityChaos
+type SecurityChaosList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []SecurityChaos `json:"items"`
+}
+
+// ListChaos returns a list of chaos
+func (in *SecurityChaosList) ListChaos() []*ChaosInstance {
+	res := make([]*ChaosInstance, 0, len(in.Items))
+	for _, item := range in.Items {
+		res = append(res, item.GetChaos())
+	}
+	return res
+}
+
 const KindStressChaos = "StressChaos"
 
 // IsDeleted returns whether this resource has been deleted
@@ -1372,6 +1490,12 @@ func init() {
 	all.register(KindPodChaos, &ChaosKind{
 		Chaos:     &PodChaos{},
 		ChaosList: &PodChaosList{},
+	})
+
+	SchemeBuilder.Register(&SecurityChaos{}, &SecurityChaosList{})
+	all.register(KindSecurityChaos, &ChaosKind{
+		Chaos:     &SecurityChaos{},
+		ChaosList: &SecurityChaosList{},
 	})
 
 	SchemeBuilder.Register(&StressChaos{}, &StressChaosList{})

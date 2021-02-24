@@ -1111,6 +1111,127 @@ func TestPodChaosListChaos(t *testing.T) {
 	chaos.ListChaos()
 }
 
+func TestSecurityChaosIsDeleted(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.IsDeleted()
+}
+
+func TestSecurityChaosIsIsPaused(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.IsPaused()
+}
+
+func TestSecurityChaosGetDuration(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.GetDuration()
+}
+
+func TestSecurityChaosGetNextStart(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.GetNextStart()
+}
+
+func TestSecurityChaosSetNextStart(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.SetNextStart(time.Now())
+}
+
+func TestSecurityChaosGetNextRecover(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.GetNextRecover()
+}
+
+func TestSecurityChaosSetNextRecover(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.SetNextRecover(time.Now())
+}
+
+func TestSecurityChaosGetScheduler(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.GetScheduler()
+}
+
+func TestSecurityChaosGetChaos(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.GetChaos()
+}
+
+func TestSecurityChaosGetStatus(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaos{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.GetStatus()
+}
+
+func TestSecurityChaosListChaos(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	chaos := &SecurityChaosList{}
+	err := faker.FakeData(chaos)
+
+	g.Expect(err).To(BeNil())
+
+	chaos.ListChaos()
+}
+
 func TestStressChaosIsDeleted(t *testing.T) {
 	g := NewGomegaWithT(t)
 
