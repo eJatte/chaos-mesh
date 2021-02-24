@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-make image
+SWAGGER=1 UI=1 make all
 make docker-push

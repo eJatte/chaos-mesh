@@ -6,8 +6,9 @@ import (
 	"github.com/chaos-mesh/chaos-mesh/controllers/config"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/client"
 	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-mesh/pkg/events"
 	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
-
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -60,6 +61,23 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			return err
 		}
 	}
+
+	helloworldchaos.Status.Experiment.PodRecords = make([]v1alpha1.PodStatus, 0, len(pods))
+	for _, pod := range pods {
+		ps := v1alpha1.PodStatus{
+			Namespace: pod.Namespace,
+			Name:      pod.Name,
+			HostIP:    pod.Status.HostIP,
+			PodIP:     pod.Status.PodIP,
+			Action:    "Ur mum",
+			Message:   "Pod was helloed successfully",
+		}
+		e.Log.Info("CREATING A RECORD")
+		helloworldchaos.Status.Experiment.PodRecords = append(helloworldchaos.Status.Experiment.PodRecords, ps)
+	}
+
+	e.Log.Info("CREATING AN EVENT")
+	e.Event(helloworldchaos, v1.EventTypeNormal, events.ChaosRecovered, "")
 
 	/*var p int32 = 3
 	var user int64 = 0

@@ -115,7 +115,7 @@ chaosDaemon:
   affinity: {}
 
 dashboard:
-  create: false
+  create: true
 
   replicaCount: 1
 
