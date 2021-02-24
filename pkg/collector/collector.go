@@ -58,7 +58,7 @@ func (r *ChaosCollector) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	err := r.Get(ctx, req.NamespacedName, obj)
 	if apierrors.IsNotFound(err) {
 		if err = r.archiveExperiment(req.Namespace, req.Name); err != nil {
-			r.Log.Error(err, "failed to archive experiment is not found")
+			r.Log.Error(err, "failed to archive experiment")
 		}
 		return ctrl.Result{}, nil
 	}
@@ -70,13 +70,13 @@ func (r *ChaosCollector) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if obj.IsDeleted() {
 		if err = r.archiveExperiment(req.Namespace, req.Name); err != nil {
-			r.Log.Error(err, "failed to archive experiment is deleted")
+			r.Log.Error(err, "failed to archive experiment")
 		}
 		return ctrl.Result{}, nil
 	}
 
 	if err := r.setUnarchivedExperiment(req, obj); err != nil {
-		r.Log.Error(err, "failed to  se unarchived experiment")
+		r.Log.Error(err, "failed to archive experiment")
 		// ignore error here
 	}
 
@@ -263,7 +263,7 @@ func (r *ChaosCollector) archiveExperiment(ns, name string) error {
 	}
 
 	if err := r.archive.Archive(context.Background(), ns, name); err != nil {
-		r.Log.Error(err, "failed to archive experiment updateincomplete", "namespace", ns, "name", name)
+		r.Log.Error(err, "failed to archive experiment", "namespace", ns, "name", name)
 		return err
 	}
 
