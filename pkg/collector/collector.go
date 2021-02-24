@@ -58,7 +58,7 @@ func (r *ChaosCollector) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	err := r.Get(ctx, req.NamespacedName, obj)
 	if apierrors.IsNotFound(err) {
 		if err = r.archiveExperiment(req.Namespace, req.Name); err != nil {
-			r.Log.Error(err, "failed to archive experiment")
+			r.Log.Error(err, "failed to archive experiment is not found")
 		}
 		return ctrl.Result{}, nil
 	}
@@ -70,13 +70,13 @@ func (r *ChaosCollector) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if obj.IsDeleted() {
 		if err = r.archiveExperiment(req.Namespace, req.Name); err != nil {
-			r.Log.Error(err, "failed to archive experiment")
+			r.Log.Error(err, "failed to archive experiment is deleted")
 		}
 		return ctrl.Result{}, nil
 	}
 
 	if err := r.setUnarchivedExperiment(req, obj); err != nil {
-		r.Log.Error(err, "failed to archive experiment")
+		r.Log.Error(err, "failed to  se unarchived experiment")
 		// ignore error here
 	}
 
@@ -214,7 +214,7 @@ func (r *ChaosCollector) setUnarchivedExperiment(req ctrl.Request, obj v1alpha1.
 		archive.Action = string(chaos.Spec.Action)
 	case *v1alpha1.IoChaos:
 		archive.Action = string(chaos.Spec.Action)
-	case *v1alpha1.TimeChaos, *v1alpha1.KernelChaos, *v1alpha1.StressChaos:
+	case *v1alpha1.TimeChaos, *v1alpha1.KernelChaos, *v1alpha1.StressChaos, *v1alpha1.HelloWorldChaos:
 		archive.Action = ""
 	case *v1alpha1.DNSChaos:
 		archive.Action = string(chaos.Spec.Action)
@@ -263,7 +263,7 @@ func (r *ChaosCollector) archiveExperiment(ns, name string) error {
 	}
 
 	if err := r.archive.Archive(context.Background(), ns, name); err != nil {
-		r.Log.Error(err, "failed to archive experiment", "namespace", ns, "name", name)
+		r.Log.Error(err, "failed to archive experiment updateincomplete", "namespace", ns, "name", name)
 		return err
 	}
 

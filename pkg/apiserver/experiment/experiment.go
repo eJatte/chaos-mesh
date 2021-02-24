@@ -152,6 +152,7 @@ func (s *Service) createExperiment(c *gin.Context) {
 		v1alpha1.KindTimeChaos:    s.createTimeChaos,
 		v1alpha1.KindKernelChaos:  s.createKernelChaos,
 		v1alpha1.KindDNSChaos:     s.createDNSChaos,
+		v1alpha1.KindHelloWorldChaos: s.createHelloWorldChaos,
 	}
 
 	f, ok := createFuncs[exp.Target.Kind]
@@ -193,6 +194,28 @@ func (s *Service) createPodChaos(exp *core.ExperimentInfo, kubeCli client.Client
 
 	if exp.Scheduler.Duration != "" {
 		chaos.Spec.Duration = &exp.Scheduler.Duration
+	}
+
+	return kubeCli.Create(context.Background(), chaos)
+}
+
+func (s *Service) createHelloWorldChaos(exp *core.ExperimentInfo, kubeCli client.Client) error {
+	chaos := &v1alpha1.HelloWorldChaos{
+		ObjectMeta: v1.ObjectMeta{
+			Name:        exp.Name,
+			Namespace:   exp.Namespace,
+			Labels:      exp.Labels,
+			Annotations: exp.Annotations,
+		},
+		Spec: v1alpha1.HelloWorldChaosSpec{
+			Selector:      exp.Scope.ParseSelector(),
+			Mode:          v1alpha1.PodMode(exp.Scope.Mode),
+			Value:         exp.Scope.Value,
+		},
+	}
+
+	if exp.Scheduler.Cron != "" {
+		chaos.Spec.Scheduler = &v1alpha1.SchedulerSpec{Cron: exp.Scheduler.Cron}
 	}
 
 	return kubeCli.Create(context.Background(), chaos)
@@ -410,6 +433,49 @@ func (s *Service) createDNSChaos(exp *core.ExperimentInfo, kubeCli client.Client
 
 func (s *Service) getPodChaosDetail(namespace string, name string, kubeCli client.Client) (Detail, error) {
 	chaos := &v1alpha1.PodChaos{}
+
+	chaosKey := types.NamespacedName{Namespace: namespace, Name: name}
+	if err := kubeCli.Get(context.Background(), chaosKey, chaos); err != nil {
+		if apierrors.IsNotFound(err) {
+			return Detail{}, utils.ErrNotFound.NewWithNoMessage()
+		}
+
+		return Detail{}, err
+	}
+
+	gvk, err := apiutil.GVKForObject(chaos, s.scheme)
+	if err != nil {
+		return Detail{}, err
+	}
+
+	return Detail{
+		Experiment: Experiment{
+			Base: Base{
+				Kind:      gvk.Kind,
+				Namespace: chaos.Namespace,
+				Name:      chaos.Name,
+			},
+			UID:           chaos.GetChaos().UID,
+			Created:       chaos.GetChaos().StartTime.Format(time.RFC3339),
+			Status:        chaos.GetChaos().Status,
+			FailedMessage: chaos.GetStatus().FailedMessage,
+		},
+		YAML: core.ExperimentYAMLDescription{
+			APIVersion: gvk.GroupVersion().String(),
+			Kind:       gvk.Kind,
+			Metadata: core.ExperimentYAMLMetadata{
+				Name:        chaos.Name,
+				Namespace:   chaos.Namespace,
+				Labels:      chaos.Labels,
+				Annotations: chaos.Annotations,
+			},
+			Spec: chaos.Spec,
+		},
+	}, nil
+}
+
+func (s *Service) getHelloWorldChaosDetail(namespace string, name string, kubeCli client.Client) (Detail, error) {
+	chaos := &v1alpha1.HelloWorldChaos{}
 
 	chaosKey := types.NamespacedName{Namespace: namespace, Name: name}
 	if err := kubeCli.Get(context.Background(), chaosKey, chaos); err != nil {
@@ -810,6 +876,8 @@ func (s *Service) getExperimentDetail(c *gin.Context) {
 	switch kind {
 	case v1alpha1.KindPodChaos:
 		expDetail, err = s.getPodChaosDetail(ns, name, kubeCli)
+	case v1alpha1.KindHelloWorldChaos:
+		expDetail, err = s.getHelloWorldChaosDetail(ns, name, kubeCli)
 	case v1alpha1.KindIoChaos:
 		expDetail, err = s.getIoChaosDetail(ns, name, kubeCli)
 	case v1alpha1.KindNetworkChaos:
@@ -1152,6 +1220,7 @@ func (s *Service) updateExperiment(c *gin.Context) {
 
 	updateFuncs := map[string]updateExperimentFunc{
 		v1alpha1.KindPodChaos:     s.updatePodChaos,
+		v1alpha1.KindHelloWorldChaos:     s.updateHelloWorldChaos,
 		v1alpha1.KindNetworkChaos: s.updateNetworkChaos,
 		v1alpha1.KindIoChaos:      s.updateIOChaos,
 		v1alpha1.KindStressChaos:  s.updateStressChaos,
@@ -1194,6 +1263,25 @@ func (s *Service) updatePodChaos(exp *core.ExperimentYAMLDescription, kubeCli cl
 	chaos.SetAnnotations(meta.Annotations)
 
 	var spec v1alpha1.PodChaosSpec
+	mapstructure.Decode(exp.Spec, &spec)
+	chaos.Spec = spec
+
+	return kubeCli.Update(context.Background(), chaos)
+}
+
+func (s *Service) updateHelloWorldChaos(exp *core.ExperimentYAMLDescription, kubeCli client.Client) error {
+	chaos := &v1alpha1.HelloWorldChaos{}
+	meta := &exp.Metadata
+	key := types.NamespacedName{Namespace: meta.Namespace, Name: meta.Name}
+
+	if err := kubeCli.Get(context.Background(), key, chaos); err != nil {
+		return err
+	}
+
+	chaos.SetLabels(meta.Labels)
+	chaos.SetAnnotations(meta.Annotations)
+
+	var spec v1alpha1.HelloWorldChaosSpec
 	mapstructure.Decode(exp.Spec, &spec)
 	chaos.Spec = spec
 

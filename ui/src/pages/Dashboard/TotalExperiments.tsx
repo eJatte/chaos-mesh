@@ -36,6 +36,7 @@ const TotalExperiments = () => {
     TimeChaos: 0,
     StressChaos: 0,
     DNSChaos: 0,
+    HelloWorldChaos: 0,
   })
 
   const fetchExperiments = () => {

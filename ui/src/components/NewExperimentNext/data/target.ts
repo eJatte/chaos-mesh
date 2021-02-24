@@ -154,6 +154,10 @@ const data: Record<Kind, Target> = {
       },
     ],
   },
+  // Pod Fault
+  HelloWorldChaos: {
+    categories: [],
+  },
   // Network Attack
   NetworkChaos: {
     categories: [

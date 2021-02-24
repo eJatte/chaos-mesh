@@ -17,6 +17,9 @@ export function iconByKind(kind: ExperimentKind, size: 'small' | 'large' = 'larg
     case 'PodChaos':
       icon = <PodLifecycleIcon />
       break
+    case 'HelloWorldChaos':
+      icon = <LinuxKernelIcon />
+      break
     case 'NetworkChaos':
       icon = <NetworkIcon />
       break

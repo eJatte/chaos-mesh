@@ -119,6 +119,7 @@ export type ExperimentKind =
   | 'TimeChaos'
   | 'StressChaos'
   | 'DNSChaos'
+  | 'HelloWorldChaos'
 
 export interface ExperimentTarget {
   kind: ExperimentKind
