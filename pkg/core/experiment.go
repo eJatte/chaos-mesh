@@ -162,8 +162,9 @@ func (s *SelectorInfo) ParseSelector() v1alpha1.SelectorSpec {
 
 // TargetInfo defines the information of target objects.
 type TargetInfo struct {
-	Kind         string            `json:"kind" binding:"required,oneof=PodChaos HelloWorldChaos NetworkChaos IoChaos KernelChaos TimeChaos StressChaos DNSChaos"`
+	Kind         string            `json:"kind" binding:"required,oneof=PodChaos SecurityChaos HelloWorldChaos NetworkChaos IoChaos KernelChaos TimeChaos StressChaos DNSChaos"`
 	PodChaos     *PodChaosInfo     `json:"pod_chaos,omitempty" binding:"RequiredFieldEqual=Kind:PodChaos"`
+	SecurityChaos     *SecurityChaosInfo     `json:"security_chaos,omitempty" binding:"RequiredFieldEqual=Kind:SecurityChaos"`
 	HelloWorldChaos     *HelloWorldChaosInfo     `json:"hello_world_chaos,omitempty" binding:"RequiredFieldEqual=Kind:HelloWorldChaos"`
 	NetworkChaos *NetworkChaosInfo `json:"network_chaos,omitempty" binding:"RequiredFieldEqual=Kind:NetworkChaos"`
 	IOChaos      *IOChaosInfo      `json:"io_chaos,omitempty" binding:"RequiredFieldEqual=Kind:IoChaos"`
@@ -188,6 +189,10 @@ type PodChaosInfo struct {
 // HelloWorldChaosInfo defines the basic information of pod chaos for creating a new PodChaos.
 type HelloWorldChaosInfo struct {
 
+}
+
+type SecurityChaosInfo struct {
+	Action        string `json:"action" binding:"oneof='' 'run-as-root' 'test''"`
 }
 
 // NetworkChaosInfo defines the basic information of network chaos for creating a new NetworkChaos.
@@ -264,6 +269,26 @@ func (e *Experiment) ParsePodChaos() (ExperimentYAMLDescription, error) {
 // ParseHelloWorldChaos Parse HelloWorldChaos JSON string into ExperimentYAMLDescription.
 func (e *Experiment) ParseHelloWorldChaos() (ExperimentYAMLDescription, error) {
 	chaos := &v1alpha1.HelloWorldChaos{}
+	if err := json.Unmarshal([]byte(e.Experiment), &chaos); err != nil {
+		return ExperimentYAMLDescription{}, err
+	}
+
+	return ExperimentYAMLDescription{
+		APIVersion: chaos.APIVersion,
+		Kind:       chaos.Kind,
+		Metadata: ExperimentYAMLMetadata{
+			Name:        chaos.Name,
+			Namespace:   chaos.Namespace,
+			Labels:      chaos.Labels,
+			Annotations: chaos.Annotations,
+		},
+		Spec: chaos.Spec,
+	}, nil
+}
+
+// ParseSecurityChaos Parse ParseSecurityChaos JSON string into ExperimentYAMLDescription.
+func (e *Experiment) ParseSecurityChaos() (ExperimentYAMLDescription, error) {
+	chaos := &v1alpha1.SecurityChaos{}
 	if err := json.Unmarshal([]byte(e.Experiment), &chaos); err != nil {
 		return ExperimentYAMLDescription{}, err
 	}

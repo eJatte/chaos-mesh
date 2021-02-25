@@ -170,6 +170,8 @@ func (s *Service) detail(c *gin.Context) {
 		yaml, err = exp.ParsePodChaos()
 	case v1alpha1.KindHelloWorldChaos:
 		yaml, err = exp.ParseHelloWorldChaos()
+	case v1alpha1.KindSecurityChaos:
+		yaml, err = exp.ParseSecurityChaos()
 	case v1alpha1.KindIoChaos:
 		yaml, err = exp.ParseIOChaos()
 	case v1alpha1.KindNetworkChaos:

@@ -210,6 +210,8 @@ func (r *ChaosCollector) setUnarchivedExperiment(req ctrl.Request, obj v1alpha1.
 	switch chaos := obj.(type) {
 	case *v1alpha1.PodChaos:
 		archive.Action = string(chaos.Spec.Action)
+	case *v1alpha1.SecurityChaos:
+		archive.Action = string(chaos.Spec.Action)
 	case *v1alpha1.NetworkChaos:
 		archive.Action = string(chaos.Spec.Action)
 	case *v1alpha1.IoChaos:
