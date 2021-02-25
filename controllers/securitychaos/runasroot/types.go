@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/chaos-mesh/chaos-mesh/pkg/events"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -29,12 +30,58 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
-	e.Log.Info("Hello Run As Root! with action <"+string(securitychaos.Spec.Action)+">")
+	e.Log.Info("Hello Run As Root! with action <" + string(securitychaos.Spec.Action) + ">")
+
+	var user int64 = 0
+
+	pod := v1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "security-chaos-run-as-root",
+			Namespace: "default",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "run-as-root",
+					Image: "paulbouwer/hello-kubernetes:1.8",
+					Ports: []v1.ContainerPort{
+						{
+							ContainerPort: 8080,
+						},
+					},
+					SecurityContext: &v1.SecurityContext{
+						RunAsUser: &user,
+					},
+				},
+			},
+		},
+	}
+
+	err := e.Create(ctx, &pod)
+	if err != nil {
+		e.Log.Error(err, "Failed to create pod")
+		securitychaos.Status.Experiment.Message = "failed to create pod"
+		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to create pod")
+		return err
+	}
+
+	err = e.Delete(ctx, &pod)
+	if err != nil {
+		e.Log.Error(err, "Failed to delete pod")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to delete pod")
+		return err
+	}
 
 	securitychaos.Status.Experiment.Message = "experiment was super duper successful"
 	securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
 
-	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Hello from run as root")
+	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Successfully created pod")
 
 	return nil
 }
