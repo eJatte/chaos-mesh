@@ -3,7 +3,8 @@ package runasroot
 import (
 	"context"
 	"errors"
-
+	"github.com/chaos-mesh/chaos-mesh/pkg/events"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -21,12 +22,19 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	securitychaos, ok := chaos.(*v1alpha1.SecurityChaos)
 	if !ok {
-		err := errors.New("chaos is not PodChaos")
-		e.Log.Error(err, "chaos is not PodChaos", "chaos", chaos)
+		err := errors.New("chaos is not SecurityChaos")
+		e.Log.Error(err, "chaos is not SecurityChaos", "chaos", chaos)
 		return err
 	}
 
+	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
+
 	e.Log.Info("Hello Run As Root! with action <"+string(securitychaos.Spec.Action)+">")
+
+	securitychaos.Status.Experiment.Message = "experiment was super duper successful"
+	securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Hello from run as root")
 
 	return nil
 }

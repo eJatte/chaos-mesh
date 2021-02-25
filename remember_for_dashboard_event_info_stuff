@@ -1,0 +1,9 @@
+api/v1alpha1/common_types.go:
+  ExperimentStatus
+    Verkar kanske kunna ändra här för att lägga till?
+pkg/apiserver/event/event.go
+  Event
+    Kan kanske kunna ändra här
+pkg/collector/collector.go
+  createEvent
+    Kunde lägga till saker här och dom kom fram i API när man listade events, men verkar inte hämta datan från the stuffs?

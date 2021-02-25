@@ -5,3 +5,5 @@ metadata:
   namespace: chaos-testing
 spec:
   action: run-as-root
+  scheduler:
+    cron: "@every 1m"

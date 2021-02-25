@@ -209,10 +209,14 @@ spec:
             experiment:
               description: Experiment records the last experiment state.
               properties:
+                action:
+                  type: string
                 duration:
                   type: string
                 endTime:
                   format: date-time
+                  type: string
+                message:
                   type: string
                 phase:
                   description: ExperimentPhase is the current status of chaos experiment.

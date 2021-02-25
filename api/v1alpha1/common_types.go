@@ -201,6 +201,10 @@ type ExperimentStatus struct {
 	Duration string `json:"duration,omitempty"`
 	// +optional
 	PodRecords []PodStatus `json:"podRecords,omitempty"`
+	// +optional
+	Message string `json:"message,omitempty"`
+	// +optional
+	Action string `json:"action,omitempty"`
 }
 
 var log = ctrl.Log.WithName("validate-webhook")

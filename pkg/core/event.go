@@ -81,7 +81,9 @@ type Event struct {
 	Experiment   string       `gorm:"index:experiment" json:"experiment"`
 	Namespace    string       `json:"namespace"`
 	Kind         string       `json:"kind"`
+	Action string `json:"action"`
 	Message      string       `json:"message"`
+	FailedMessage      string       `json:"failed_message"`
 	StartTime    *time.Time   `gorm:"index:start_time" json:"start_time"`
 	FinishTime   *time.Time   `json:"finish_time"`
 	Duration     string       `json:"duration"`
