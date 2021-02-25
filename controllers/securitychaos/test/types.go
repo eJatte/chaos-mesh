@@ -1,4 +1,4 @@
-package securitychaos
+package test
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type endpoint struct {
 }
 
 func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.InnerObject) error {
-	e.Log.Info("Hello World!")
+	e.Log.Info("Hello Test!")
 	return nil
 }
 
@@ -31,7 +31,12 @@ func (e *endpoint) Object() v1alpha1.InnerObject {
 
 func init() {
 	router.Register("securitychaos", &v1alpha1.SecurityChaos{}, func(obj runtime.Object) bool {
-		return true
+		chaos, ok := obj.(*v1alpha1.SecurityChaos)
+		if !ok {
+			return false
+		}
+
+		return chaos.Spec.Action == v1alpha1.TestAction
 	}, func(ctx ctx.Context) end.Endpoint {
 		return &endpoint{
 			Context: ctx,

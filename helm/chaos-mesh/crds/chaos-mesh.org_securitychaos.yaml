@@ -36,6 +36,13 @@ spec:
           description: SecurityChaosSpec is the content of the specification for a
             SecurityChaos
           properties:
+            action:
+              description: 'Action defines the specific security chaos action. Supported
+                action: run-as-root / test Default action: run-as-root'
+              enum:
+              - run-as-root
+              - test
+              type: string
             duration:
               description: Duration represents the duration of the chaos action
               type: string
@@ -52,6 +59,8 @@ spec:
               required:
               - cron
               type: object
+          required:
+          - action
           type: object
         status:
           description: SecurityChaosStatus represents the status of a SecurityChaos

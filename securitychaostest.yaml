@@ -3,4 +3,5 @@ kind: SecurityChaos
 metadata:
   name: security-chaos
   namespace: chaos-testing
-spec: {}
+spec:
+  action: run-as-root
