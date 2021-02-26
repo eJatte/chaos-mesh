@@ -27,6 +27,14 @@ const (
 	TestAction SecurityChaosAction = "test"
 )
 
+// SecurityChaosMessage
+type SecurityChaosMessage string
+
+const (
+	AttackSucceededMessage SecurityChaosMessage = "ATTACK_SUCCEEDED"
+	AttackFailedMessage SecurityChaosMessage = "ATTACK_FAILED"
+)
+
 // SecurityChaosSpec is the content of the specification for a SecurityChaos
 type SecurityChaosSpec struct {
 	// Duration represents the duration of the chaos action

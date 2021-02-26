@@ -63,25 +63,23 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	err := e.Create(ctx, &pod)
 	if err != nil {
-		e.Log.Error(err, "Failed to create pod")
-		securitychaos.Status.Experiment.Message = "failed to create pod"
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
 		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
 
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to create pod")
-		return err
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to create a root user pod. Attack failed.")
+	} else {
+		err = e.Delete(ctx, &pod)
+		if err != nil {
+			e.Log.Error(err, "Failed to delete pod")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to delete pod")
+			return err
+		}
+
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
+		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Created a root user pod. Attack succeeded.")
 	}
-
-	err = e.Delete(ctx, &pod)
-	if err != nil {
-		e.Log.Error(err, "Failed to delete pod")
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to delete pod")
-		return err
-	}
-
-	securitychaos.Status.Experiment.Message = "experiment was super duper successful"
-	securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
-
-	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Successfully created pod")
 
 	return nil
 }
