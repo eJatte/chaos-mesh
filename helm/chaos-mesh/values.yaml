@@ -32,7 +32,7 @@ controllerManager:
   priorityClassName: ""
 
   image: localhost:5000/pingcap/chaos-mesh:latest
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Never
 
   allowedNamespaces: ""
   ignoredNamespaces: ""
@@ -69,7 +69,7 @@ controllerManager:
 
 chaosDaemon:
   image: localhost:5000/pingcap/chaos-daemon:latest
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Never
   grpcPort: 31767
   httpPort: 31766
   env: {}
@@ -124,7 +124,7 @@ dashboard:
   serviceAccount: chaos-controller-manager
 
   image: localhost:5000/pingcap/chaos-dashboard:latest
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Never
 
   securityMode: true
 
