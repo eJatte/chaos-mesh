@@ -23,6 +23,8 @@ type SecurityChaosAction string
 const (
 	// RunAsRootAction represents the chaos action of creating a container as root.
 	RunAsRootAction SecurityChaosAction = "run-as-root"
+	// RunAsPrivilegedAction represents the chaos action of creating a privileged container.
+	RunAsPrivilegedAction SecurityChaosAction = "run-as-privileged"
 	// TestAction represents the chaos action of test
 	TestAction SecurityChaosAction = "test"
 )
@@ -46,9 +48,9 @@ type SecurityChaosSpec struct {
 	Scheduler *SchedulerSpec `json:"scheduler,omitempty"`
 
 	// Action defines the specific security chaos action.
-	// Supported action: run-as-root / test
+	// Supported action: run-as-root / run-as-privileged / test
 	// Default action: run-as-root
-	// +kubebuilder:validation:Enum=run-as-root;test
+	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;test
 	Action SecurityChaosAction `json:"action"`
 }
 

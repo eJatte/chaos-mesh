@@ -1,18 +1,18 @@
-package runasroot
+package runasprivileged
 
 import (
-	"context"
-	"errors"
-	"github.com/chaos-mesh/chaos-mesh/pkg/events"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
+"context"
+"errors"
+"github.com/chaos-mesh/chaos-mesh/pkg/events"
+v1 "k8s.io/api/core/v1"
+metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+"k8s.io/apimachinery/pkg/runtime"
+ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-	"github.com/chaos-mesh/chaos-mesh/pkg/router"
-	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
-	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
+"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+"github.com/chaos-mesh/chaos-mesh/pkg/router"
+ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
+end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
 )
 
 type endpoint struct {
@@ -30,7 +30,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
-	var user int64 = 0
+	var isPrivileged = true
 
 	pod := v1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -44,7 +44,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
 				{
-					Name:  "run-as-root",
+					Name:  "run-as-privileged",
 					Image: "paulbouwer/hello-kubernetes:1.8",
 					Ports: []v1.ContainerPort{
 						{
@@ -52,7 +52,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 						},
 					},
 					SecurityContext: &v1.SecurityContext{
-						RunAsUser: &user,
+						Privileged: &isPrivileged,
 					},
 				},
 			},
@@ -64,7 +64,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
 		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
 
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to create a root user pod. Attack failed.")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to create a pod with a privileged container. Attack failed.")
 	} else {
 		err = e.Delete(ctx, &pod)
 		if err != nil {
@@ -76,7 +76,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
 		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
 
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Created a root user pod. Attack succeeded.")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Created a pod with a privileged container. Attack succeeded.")
 	}
 
 	return nil
@@ -97,10 +97,11 @@ func init() {
 			return false
 		}
 
-		return chaos.Spec.Action == v1alpha1.RunAsRootAction
+		return chaos.Spec.Action == v1alpha1.RunAsPrivilegedAction
 	}, func(ctx ctx.Context) end.Endpoint {
 		return &endpoint{
 			Context: ctx,
 		}
 	})
 }
+
