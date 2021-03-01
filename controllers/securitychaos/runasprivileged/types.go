@@ -45,12 +45,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			Containers: []v1.Container{
 				{
 					Name:  "run-as-privileged",
-					Image: "paulbouwer/hello-kubernetes:1.8",
-					Ports: []v1.ContainerPort{
-						{
-							ContainerPort: 8080,
-						},
-					},
+					Image: "busybox",
 					SecurityContext: &v1.SecurityContext{
 						Privileged: &isPrivileged,
 					},
