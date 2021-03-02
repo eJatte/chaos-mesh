@@ -3191,6 +3191,10 @@ spec:
             duration:
               description: Duration represents the duration of the chaos action
               type: string
+            namespace:
+              description: 'NameSpace defines the namespace that the chaos experiment
+                should be applied in. Default namespace: default'
+              type: string
             scheduler:
               description: Scheduler defines some schedule rules to control the running
                 time of the chaos experiment about time.

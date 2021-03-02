@@ -31,6 +31,11 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
 	var user int64 = 0
+	var namespace = "default"
+
+	if len(securitychaos.Spec.NameSpace) > 0 {
+		namespace = securitychaos.Spec.NameSpace
+	}
 
 	pod := v1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -39,7 +44,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "security-chaos-run-as-root",
-			Namespace: "default",
+			Namespace: namespace,
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{

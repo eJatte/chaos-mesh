@@ -5,5 +5,6 @@ metadata:
   namespace: chaos-testing
 spec:
   action: run-as-privileged
+  namespace: default
   scheduler:
     cron: "@every 1m"

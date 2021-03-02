@@ -52,6 +52,11 @@ type SecurityChaosSpec struct {
 	// Default action: run-as-root
 	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;test
 	Action SecurityChaosAction `json:"action"`
+
+	// NameSpace defines the namespace that the chaos experiment should be applied in.
+	// Default namespace: default
+	// +optional
+	NameSpace string `json:"namespace"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos
