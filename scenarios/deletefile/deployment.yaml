@@ -1,9 +1,36 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: delete-file-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: delete-file-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: delete-file-pod
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: delete-file-pod
@@ -12,6 +39,13 @@ spec:
       labels:
         app: delete-file-pod
     spec:
+      volumes:
+        - name: delete-file-pv-storage
+          persistentVolumeClaim:
+            claimName: delete-file-pv-claim
       containers:
       - name: delete-file-container
         image: hendrikmaus/kubernetes-dummy-image
+        volumeMounts:
+          - mountPath: "/data/"
+            name: delete-file-pv-storage
