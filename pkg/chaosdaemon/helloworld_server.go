@@ -3,8 +3,10 @@ package chaosdaemon
 import (
 	"context"
 	"fmt"
-	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
+
 	"github.com/golang/protobuf/ptypes/empty"
+
+	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 
 	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )

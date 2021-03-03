@@ -25,6 +25,8 @@ service ChaosDaemon {
   rpc SetDNSServer (SetDNSServerRequest) returns (google.protobuf.Empty) {}
 
   rpc ExecHelloWorldChaos(ExecHelloWorldRequest) returns (google.protobuf.Empty) {}
+
+  rpc DeleteFile(DeleteFileRequest) returns (google.protobuf.Empty) {}
 }
 
 message TcHandle {
@@ -223,4 +225,9 @@ message SetDNSServerRequest {
 
 message ExecHelloWorldRequest {
   string container_id = 1;
+}
+
+message DeleteFileRequest {
+  string container_id = 1;
+  string file_path = 2;
 }

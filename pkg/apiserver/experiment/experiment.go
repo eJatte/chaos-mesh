@@ -145,15 +145,15 @@ func (s *Service) createExperiment(c *gin.Context) {
 	}
 
 	createFuncs := map[string]createExperimentFunc{
-		v1alpha1.KindPodChaos:     s.createPodChaos,
-		v1alpha1.KindNetworkChaos: s.createNetworkChaos,
-		v1alpha1.KindIoChaos:      s.createIOChaos,
-		v1alpha1.KindStressChaos:  s.createStressChaos,
-		v1alpha1.KindTimeChaos:    s.createTimeChaos,
-		v1alpha1.KindKernelChaos:  s.createKernelChaos,
-		v1alpha1.KindDNSChaos:     s.createDNSChaos,
+		v1alpha1.KindPodChaos:        s.createPodChaos,
+		v1alpha1.KindNetworkChaos:    s.createNetworkChaos,
+		v1alpha1.KindIoChaos:         s.createIOChaos,
+		v1alpha1.KindStressChaos:     s.createStressChaos,
+		v1alpha1.KindTimeChaos:       s.createTimeChaos,
+		v1alpha1.KindKernelChaos:     s.createKernelChaos,
+		v1alpha1.KindDNSChaos:        s.createDNSChaos,
 		v1alpha1.KindHelloWorldChaos: s.createHelloWorldChaos,
-		v1alpha1.KindSecurityChaos: s.createSecurityChaos,
+		v1alpha1.KindSecurityChaos:   s.createSecurityChaos,
 	}
 
 	f, ok := createFuncs[exp.Target.Kind]
@@ -209,9 +209,9 @@ func (s *Service) createHelloWorldChaos(exp *core.ExperimentInfo, kubeCli client
 			Annotations: exp.Annotations,
 		},
 		Spec: v1alpha1.HelloWorldChaosSpec{
-			Selector:      exp.Scope.ParseSelector(),
-			Mode:          v1alpha1.PodMode(exp.Scope.Mode),
-			Value:         exp.Scope.Value,
+			Selector: exp.Scope.ParseSelector(),
+			Mode:     v1alpha1.PodMode(exp.Scope.Mode),
+			Value:    exp.Scope.Value,
 		},
 	}
 
@@ -235,7 +235,7 @@ func (s *Service) createSecurityChaos(exp *core.ExperimentInfo, kubeCli client.C
 			Annotations: exp.Annotations,
 		},
 		Spec: v1alpha1.SecurityChaosSpec{
-			Action:          v1alpha1.SecurityChaosAction(exp.Target.SecurityChaos.Action),
+			Action: v1alpha1.SecurityChaosAction(exp.Target.SecurityChaos.Action),
 		},
 	}
 
@@ -541,7 +541,6 @@ func (s *Service) getSecurityChaosDetail(namespace string, name string, kubeCli 
 		},
 	}, nil
 }
-
 
 func (s *Service) getHelloWorldChaosDetail(namespace string, name string, kubeCli client.Client) (Detail, error) {
 	chaos := &v1alpha1.HelloWorldChaos{}
@@ -1290,15 +1289,15 @@ func (s *Service) updateExperiment(c *gin.Context) {
 	}
 
 	updateFuncs := map[string]updateExperimentFunc{
-		v1alpha1.KindPodChaos:     s.updatePodChaos,
-		v1alpha1.KindSecurityChaos:     s.updateSecurityChaos,
-		v1alpha1.KindHelloWorldChaos:     s.updateHelloWorldChaos,
-		v1alpha1.KindNetworkChaos: s.updateNetworkChaos,
-		v1alpha1.KindIoChaos:      s.updateIOChaos,
-		v1alpha1.KindStressChaos:  s.updateStressChaos,
-		v1alpha1.KindTimeChaos:    s.updateTimeChaos,
-		v1alpha1.KindKernelChaos:  s.updateKernelChaos,
-		v1alpha1.KindDNSChaos:     s.updateDNSChaos,
+		v1alpha1.KindPodChaos:        s.updatePodChaos,
+		v1alpha1.KindSecurityChaos:   s.updateSecurityChaos,
+		v1alpha1.KindHelloWorldChaos: s.updateHelloWorldChaos,
+		v1alpha1.KindNetworkChaos:    s.updateNetworkChaos,
+		v1alpha1.KindIoChaos:         s.updateIOChaos,
+		v1alpha1.KindStressChaos:     s.updateStressChaos,
+		v1alpha1.KindTimeChaos:       s.updateTimeChaos,
+		v1alpha1.KindKernelChaos:     s.updateKernelChaos,
+		v1alpha1.KindDNSChaos:        s.updateDNSChaos,
 	}
 
 	f, ok := updateFuncs[exp.Kind]

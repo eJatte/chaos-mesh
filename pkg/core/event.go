@@ -74,21 +74,21 @@ type EventStore interface {
 
 // Event represents an event instance.
 type Event struct {
-	ID           uint         `gorm:"primary_key" json:"id"`
-	CreatedAt    time.Time    `json:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at"`
-	DeletedAt    *time.Time   `sql:"index" json:"deleted_at"`
-	Experiment   string       `gorm:"index:experiment" json:"experiment"`
-	Namespace    string       `json:"namespace"`
-	Kind         string       `json:"kind"`
-	Action string `json:"action"`
-	Message      string       `json:"message"`
-	FailedMessage      string       `json:"failed_message"`
-	StartTime    *time.Time   `gorm:"index:start_time" json:"start_time"`
-	FinishTime   *time.Time   `json:"finish_time"`
-	Duration     string       `json:"duration"`
-	Pods         []*PodRecord `gorm:"-" json:"pods"`
-	ExperimentID string       `gorm:"index:experiment_id" json:"experiment_id"`
+	ID            uint         `gorm:"primary_key" json:"id"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
+	DeletedAt     *time.Time   `sql:"index" json:"deleted_at"`
+	Experiment    string       `gorm:"index:experiment" json:"experiment"`
+	Namespace     string       `json:"namespace"`
+	Kind          string       `json:"kind"`
+	Action        string       `json:"action"`
+	Message       string       `json:"message"`
+	FailedMessage string       `json:"failed_message"`
+	StartTime     *time.Time   `gorm:"index:start_time" json:"start_time"`
+	FinishTime    *time.Time   `json:"finish_time"`
+	Duration      string       `json:"duration"`
+	Pods          []*PodRecord `gorm:"-" json:"pods"`
+	ExperimentID  string       `gorm:"index:experiment_id" json:"experiment_id"`
 }
 
 // PodRecord represents a pod record with event ID.

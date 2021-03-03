@@ -1,0 +1,10 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HelloWorldChaos
+metadata:
+  name: helloworld-chaos
+  namespace: chaos-testing
+spec:
+  mode: one
+  selector:
+    labelSelectors:
+      'app': 'delete-file-pod'

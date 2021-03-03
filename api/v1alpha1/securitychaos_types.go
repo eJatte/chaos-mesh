@@ -1,6 +1,5 @@
 package v1alpha1
 
-
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,7 +35,7 @@ type SecurityChaosMessage string
 
 const (
 	AttackSucceededMessage SecurityChaosMessage = "ATTACK_SUCCEEDED"
-	AttackFailedMessage SecurityChaosMessage = "ATTACK_FAILED"
+	AttackFailedMessage    SecurityChaosMessage = "ATTACK_FAILED"
 )
 
 // SecurityChaosSpec is the content of the specification for a SecurityChaos

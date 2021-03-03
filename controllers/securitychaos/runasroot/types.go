@@ -3,11 +3,13 @@ package runasroot
 import (
 	"context"
 	"errors"
-	"github.com/chaos-mesh/chaos-mesh/pkg/events"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/chaos-mesh/chaos-mesh/pkg/events"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/router"
