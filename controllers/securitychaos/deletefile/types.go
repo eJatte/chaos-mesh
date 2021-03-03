@@ -3,7 +3,9 @@ package deletefile
 import (
 	"context"
 	"errors"
+	"github.com/chaos-mesh/chaos-mesh/controllers/config"
 	"github.com/chaos-mesh/chaos-mesh/pkg/events"
+	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,7 +31,16 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
+	e.Log.Info("Select and filter pods")
+	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
+	if err != nil {
+		e.Log.Error(err, "failed to select and filter pods")
+		return err
+	}
 
+	for _, pod := range pods {
+		e.Log.Info("POD NAME: "+pod.Name)
+	}
 
 	securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
 	securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)

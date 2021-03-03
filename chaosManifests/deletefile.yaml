@@ -5,5 +5,11 @@ metadata:
   namespace: chaos-testing
 spec:
   action: delete-file
+  mode: all
+  selector:
+    pods:
+      default:
+        - delete-file-pod-695589db59-7r64f
+        - delete-file-pod-695589db59-b4mmm
   scheduler:
     cron: "@every 1m"

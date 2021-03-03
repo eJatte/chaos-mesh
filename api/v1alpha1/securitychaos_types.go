@@ -59,9 +59,39 @@ type SecurityChaosSpec struct {
 	// Default namespace: default
 	// +optional
 	NameSpace string `json:"namespace"`
+
+	// Selector is used to select pods that are used to inject chaos action.
+	// +optional
+	Selector SelectorSpec `json:"selector"`
+
+	// Mode defines the mode to run chaos action.
+	// Supported mode: one / all / fixed / fixed-percent / random-max-percent
+	// +kubebuilder:validation:Enum=one;all;fixed;fixed-percent;random-max-percent
+	// +optional
+	Mode PodMode `json:"mode"`
+
+	// Value is required when the mode is set to `FixedPodMode` / `FixedPercentPodMod` / `RandomMaxPercentPodMod`.
+	// If `FixedPodMode`, provide an integer of pods to do chaos action.
+	// If `FixedPercentPodMod`, provide a number from 0-100 to specify the percent of pods the server can do chaos action.
+	// IF `RandomMaxPercentPodMod`,  provide a number from 0-100 to specify the max percent of pods to do chaos action
+	// +optional
+	Value string `json:"value"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos
 type SecurityChaosStatus struct {
 	ChaosStatus `json:",inline"`
+}
+
+// GetSelector is a getter for Selector (for implementing SelectSpec)
+func (in *SecurityChaosSpec) GetSelector() SelectorSpec {
+	return in.Selector
+}
+
+func (in *SecurityChaosSpec) GetMode() PodMode {
+	return in.Mode
+}
+
+func (in *SecurityChaosSpec) GetValue() string {
+	return in.Value
 }

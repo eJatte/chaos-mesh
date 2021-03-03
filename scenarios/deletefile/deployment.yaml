@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delete-file-pod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: delete-file-pod
+  template:
+    metadata:
+      labels:
+        app: delete-file-pod
+    spec:
+      containers:
+      - name: delete-file-container
+        image: hendrikmaus/kubernetes-dummy-image
