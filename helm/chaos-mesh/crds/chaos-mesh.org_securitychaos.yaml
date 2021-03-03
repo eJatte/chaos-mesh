@@ -38,10 +38,12 @@ spec:
           properties:
             action:
               description: 'Action defines the specific security chaos action. Supported
-                action: run-as-root / run-as-privileged / test Default action: run-as-root'
+                action: run-as-root / run-as-privileged / delete-file / test Default
+                action: run-as-root'
               enum:
               - run-as-root
               - run-as-privileged
+              - delete-file
               - test
               type: string
             duration:

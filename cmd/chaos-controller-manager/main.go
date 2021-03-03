@@ -47,6 +47,7 @@ import (
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/podchaos/containerkill"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/podchaos/podfailure"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/podchaos/podkill"
+	_ "github.com/chaos-mesh/chaos-mesh/controllers/securitychaos/deletefile"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/securitychaos/runasprivileged"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/securitychaos/runasroot"
 	_ "github.com/chaos-mesh/chaos-mesh/controllers/securitychaos/test"

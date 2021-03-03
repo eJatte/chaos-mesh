@@ -25,6 +25,8 @@ const (
 	RunAsRootAction SecurityChaosAction = "run-as-root"
 	// RunAsPrivilegedAction represents the chaos action of creating a privileged container.
 	RunAsPrivilegedAction SecurityChaosAction = "run-as-privileged"
+	// DeleteFileAction represents the chaos action of attempting to delete a file that should not be deletable.
+	DeleteFileAction SecurityChaosAction = "delete-file"
 	// TestAction represents the chaos action of test
 	TestAction SecurityChaosAction = "test"
 )
@@ -48,9 +50,9 @@ type SecurityChaosSpec struct {
 	Scheduler *SchedulerSpec `json:"scheduler,omitempty"`
 
 	// Action defines the specific security chaos action.
-	// Supported action: run-as-root / run-as-privileged / test
+	// Supported action: run-as-root / run-as-privileged / delete-file / test
 	// Default action: run-as-root
-	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;test
+	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;delete-file;test
 	Action SecurityChaosAction `json:"action"`
 
 	// NameSpace defines the namespace that the chaos experiment should be applied in.
