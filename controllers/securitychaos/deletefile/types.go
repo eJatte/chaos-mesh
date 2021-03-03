@@ -3,17 +3,19 @@ package deletefile
 import (
 	"context"
 	"errors"
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/controllers/config"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/client"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/chaos-mesh/chaos-mesh/pkg/events"
+	"github.com/chaos-mesh/chaos-mesh/pkg/router"
+	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
+	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
 	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-	"github.com/chaos-mesh/chaos-mesh/pkg/router"
-	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
-	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
+	"strconv"
 )
 
 type endpoint struct {
@@ -39,7 +41,28 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	}
 
 	for _, pod := range pods {
-		e.Log.Info("POD NAME: "+pod.Name)
+
+		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
+		if err != nil {
+			e.Log.Error(err, "get chaos daemon client")
+			return err
+		}
+		defer daemonClient.Close()
+
+		containerID := pod.Status.ContainerStatuses[0].ContainerID
+
+		response, err := daemonClient.ContainerGetPid(ctx, &pb.ContainerRequest{
+			Action: &pb.ContainerAction{
+				Action: pb.ContainerAction_GETPID,
+			},
+			ContainerId: containerID,
+		})
+		if err != nil {
+			e.Log.Error(err, "container get pid")
+			return err
+		}
+
+		e.Log.Info("BYE BYE POD NAME: " + pod.Name+" containerId: "+containerID+" containerPID: "+ strconv.Itoa(int(response.Pid)))
 	}
 
 	securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
