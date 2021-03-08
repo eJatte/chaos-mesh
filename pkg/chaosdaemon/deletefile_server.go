@@ -61,5 +61,31 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 		log.Info("cmd output", "output", string(out))
 	}
 
+	log.Info("Executing cd write to file")
+	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd super/data/ && echo 'hello friend' >> hello.txt")).
+		SetContext(ctx).
+		BuildNsEnter(pid)
+	out, err = cmd.Output()
+	if err != nil {
+		log.Error(err, "Failed to cd write to file")
+		return nil, err
+	}
+	if len(out) != 0 {
+		log.Info("cmd output", "output", string(out))
+	}
+
+	log.Info("Executing removing file")
+	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("rm -rf "+req.FilePath)).
+		SetContext(ctx).
+		BuildNsEnter(pid)
+	out, err = cmd.Output()
+	if err != nil {
+		log.Error(err, "Failed to delete file")
+		return nil, err
+	}
+	if len(out) != 0 {
+		log.Info("cmd output", "output", string(out))
+	}
+
 	return &empty.Empty{}, nil
 }

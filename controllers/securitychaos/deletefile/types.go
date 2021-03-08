@@ -53,7 +53,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 		_, err = daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
 			ContainerId:          containerID,
-			FilePath:             "/data/hello.txt",
+			FilePath:             "super/data/hello.txt",
 		})
 
 		if err != nil {
@@ -61,7 +61,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			return err
 		}
 
-		e.Log.Info("9 POD NAME: " + pod.Name + " containerId: " + containerID)
+		e.Log.Info("POD NAME: " + pod.Name + " containerId: " + containerID)
 	}
 
 	securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
