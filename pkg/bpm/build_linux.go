@@ -16,6 +16,7 @@ package bpm
 import (
 	"context"
 	"os/exec"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -57,6 +58,25 @@ func (b *ProcessBuilder) Build() *ManagedProcess {
 	command := exec.CommandContext(b.ctx, cmd, args...)
 	command.SysProcAttr = &syscall.SysProcAttr{}
 	command.SysProcAttr.Pdeathsig = syscall.SIGTERM
+
+	return &ManagedProcess{
+		Cmd:        command,
+		Identifier: b.identifier,
+	}
+}
+
+func (b *ProcessBuilder) BuildNsEnter(pid uint32) *ManagedProcess {
+	args := b.args
+	cmd := b.cmd
+
+	args = append([]string{"--target", strconv.Itoa(int(pid)),"--mount","--uts","--ipc","--net","--pid","--", cmd}, args...)
+
+	cmd = "nsenter"
+
+	log.Info("build command", "command", cmd+" "+strings.Join(args, " "))
+
+	command := exec.CommandContext(b.ctx, cmd, args...)
+	command.SysProcAttr = &syscall.SysProcAttr{}
 
 	return &ManagedProcess{
 		Cmd:        command,

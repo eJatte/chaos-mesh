@@ -25,8 +25,10 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 	log.Info("Executing ls")
 	cmd := bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("ls")).
 		SetNS(pid, bpm.PidNS).
+		SetNS(pid, bpm.NetNS).
+		SetNS(pid, bpm.IpcNS).
 		SetContext(ctx).
-		Build()
+		BuildNsEnter(pid)
 	out, err := cmd.Output()
 	if err != nil {
 		log.Error(err, "Failed to execute ls")
