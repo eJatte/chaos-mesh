@@ -65,11 +65,11 @@ func (b *ProcessBuilder) Build() *ManagedProcess {
 	}
 }
 
-func (b *ProcessBuilder) BuildNsEnter(pid uint32) *ManagedProcess {
+func (b *ProcessBuilder) BuildNsEnter(pid uint32, uid uint32) *ManagedProcess {
 	args := b.args
 	cmd := b.cmd
 
-	args = append([]string{"--target", strconv.Itoa(int(pid)),"--mount","--uts","--ipc","--net","--pid","--", cmd}, args...)
+	args = append([]string{"-S", strconv.Itoa(int(uid)), "--target", strconv.Itoa(int(pid)), "--mount", "--uts", "--ipc", "--net", "--pid", "--", cmd}, args...)
 
 	cmd = "nsenter"
 

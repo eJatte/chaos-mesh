@@ -39,6 +39,8 @@ spec:
       labels:
         app: delete-file-pod
     spec:
+      securityContext:
+        runAsUser: 1000
       volumes:
         - name: delete-file-pv-storage
           persistentVolumeClaim:
