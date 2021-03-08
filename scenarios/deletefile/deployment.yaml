@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/data"
+    path: "/mnt/data"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -47,5 +47,5 @@ spec:
       - name: delete-file-container
         image: hendrikmaus/kubernetes-dummy-image
         volumeMounts:
-          - mountPath: "/data/"
+          - mountPath: "/super/data"
             name: delete-file-pv-storage
