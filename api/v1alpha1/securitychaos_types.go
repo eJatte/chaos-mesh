@@ -75,6 +75,14 @@ type SecurityChaosSpec struct {
 	// IF `RandomMaxPercentPodMod`,  provide a number from 0-100 to specify the max percent of pods to do chaos action
 	// +optional
 	Value string `json:"value"`
+
+	// DirectoryPath specified the path of a directory, needed in delete file experiment
+	// +optional
+	DirectoryPath string `json:"directorypath"`
+
+	// UID specifies the uid to use in the experiment, needed in delete file experiment.
+	// +optional
+	UID uint32 `json:"uid"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos

@@ -32,7 +32,14 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
-	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
+	if len(securitychaos.Spec.DirectoryPath) == 0 {
+		msg := "need to specify a directory path"
+		err := errors.New(msg)
+		e.Log.Error(err, msg)
+		return err
+	}
+
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
 	e.Log.Info("Select and filter pods")
 	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
@@ -54,8 +61,8 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 		_, err = daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
 			ContainerId: containerID,
-			DirectoryPath:    "super/data/",
-			Uid: 1000,
+			DirectoryPath: securitychaos.Spec.DirectoryPath,
+			Uid: securitychaos.Spec.UID,
 		})
 
 		if err != nil {

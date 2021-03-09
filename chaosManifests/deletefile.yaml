@@ -6,6 +6,8 @@ metadata:
 spec:
   action: delete-file
   mode: one
+  uid: 1000
+  directorypath: super/data/
   selector:
     labelSelectors:
       'app': 'delete-file-pod'

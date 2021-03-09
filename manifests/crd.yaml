@@ -3190,6 +3190,10 @@ spec:
               - delete-file
               - test
               type: string
+            directorypath:
+              description: DirectoryPath specified the path of a directory, needed
+                in delete file experiment
+              type: string
             duration:
               description: Duration represents the duration of the chaos action
               type: string
@@ -3308,6 +3312,11 @@ spec:
                     belong, and the each values is a set of pod names.
                   type: object
               type: object
+            uid:
+              description: UID specifies the uid to use in the experiment, needed
+                in delete file experiment.
+              format: int32
+              type: integer
             value:
               description: Value is required when the mode is set to `FixedPodMode`
                 / `FixedPercentPodMod` / `RandomMaxPercentPodMod`. If `FixedPodMode`,
