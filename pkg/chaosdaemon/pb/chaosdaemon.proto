@@ -26,7 +26,7 @@ service ChaosDaemon {
 
   rpc ExecHelloWorldChaos(ExecHelloWorldRequest) returns (google.protobuf.Empty) {}
 
-  rpc DeleteFile(DeleteFileRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse) {}
 }
 
 message TcHandle {
@@ -231,4 +231,8 @@ message DeleteFileRequest {
   string container_id = 1;
   string directory_path = 2;
   uint32 uid = 3;
+}
+
+message DeleteFileResponse {
+  bool attack_successful = 1;
 }

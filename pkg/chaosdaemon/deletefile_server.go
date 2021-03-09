@@ -20,7 +20,7 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 		return nil, err
 	}
 	fileName := "dummyfile"
-	filePath := fmt.Sprintf("%s%s", req.DirectoryPath,fileName)
+	filePath := fmt.Sprintf("%s%s", req.DirectoryPath, fileName)
 
 	log.Info(fmt.Sprintf("Creating file %s", filePath))
 	cmd := bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("echo 'hello friend' >> %s", filePath)).
@@ -54,7 +54,7 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 	}
 
 	log.Info(fmt.Sprintf("Deleting file %s", filePath))
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("rm -rf %s",filePath)).
+	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("rm -rf %s", filePath)).
 		SetContext(ctx).
 		BuildNsEnter(pid, 0)
 	out, err = cmd.Output()

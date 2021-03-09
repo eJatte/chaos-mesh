@@ -39,44 +39,58 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
+	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
 	e.Log.Info("Select and filter pods")
 	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
 	if err != nil {
 		e.Log.Error(err, "failed to select and filter pods")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to select and filter pods")
 		return err
 	}
 
-	for _, pod := range pods {
+
+	if len(pods) > 0 {
+		pod := pods[0]
 
 		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
 		if err != nil {
-			e.Log.Error(err, "get chaos daemon client")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to get chaos daemon client")
+			e.Log.Error(err, "failed to get chaos daemon client")
 			return err
 		}
 		defer daemonClient.Close()
 
 		containerID := pod.Status.ContainerStatuses[0].ContainerID
 
-		_, err = daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
-			ContainerId: containerID,
+		response, err := daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
+			ContainerId:   containerID,
 			DirectoryPath: securitychaos.Spec.DirectoryPath,
-			Uid: securitychaos.Spec.UID,
+			Uid:           securitychaos.Spec.UID,
 		})
 
 		if err != nil {
-			e.Log.Error(err, "Delete file")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Error when deleting file")
+			e.Log.Error(err, "Error when deleting file")
 			return err
 		}
 
-		e.Log.Info("POD NAME: " + pod.Name + " containerId: " + containerID)
+		if response.AttackSuccessful {
+			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
+			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Deleted file. Attack succeeded.")
+		} else {
+			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
+			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to delete file. Attack failed.")
+		}
+	} else {
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "no pods selected")
+		e.Log.Error(err, "no pods selected")
+		return err
 	}
-
-	securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
-	securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
-
-	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Deleted file. Attack succeeded.")
 
 	return nil
 }
