@@ -3,6 +3,7 @@ package deletefile
 import (
 	"context"
 	"errors"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -52,8 +53,9 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		containerID := pod.Status.ContainerStatuses[0].ContainerID
 
 		_, err = daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
-			ContainerId:          containerID,
-			FilePath:             "super/data/hello.txt",
+			ContainerId: containerID,
+			DirectoryPath:    "super/data/",
+			Uid: 1000,
 		})
 
 		if err != nil {

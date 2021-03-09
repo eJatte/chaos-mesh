@@ -229,5 +229,6 @@ message ExecHelloWorldRequest {
 
 message DeleteFileRequest {
   string container_id = 1;
-  string file_path = 2;
+  string directory_path = 2;
+  uint32 uid = 3;
 }
