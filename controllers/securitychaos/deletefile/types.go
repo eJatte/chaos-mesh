@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/chaos-mesh/chaos-mesh/controllers/config"
@@ -60,8 +59,6 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		e.Log.Error(err, "Failed to create file")
 		return err
 	}
-
-	//time.Sleep(10 * time.Second)
 
 	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
 	if err != nil {
@@ -142,7 +139,7 @@ func (e *endpoint) DeleteDummyFile(ctx context.Context, uid int64, gid int64, pv
 	return e.RunJob(ctx, job)
 }
 
-type PropagationOptions struct {}
+type PropagationOptions struct{}
 
 func (p PropagationOptions) ApplyToDelete(options *client2.DeleteOptions) {
 	var prop = metav1.DeletePropagationForeground
@@ -155,8 +152,7 @@ func (e *endpoint) RunJob(ctx context.Context, job v12.Job) error {
 		return err
 	}
 
-	time.Sleep(10 * time.Second)
-	//errWait := e.WaitForJob(ctx, job)
+	errWait := e.WaitForJob(ctx, job)
 
 	var p PropagationOptions
 
@@ -164,38 +160,49 @@ func (e *endpoint) RunJob(ctx context.Context, job v12.Job) error {
 	if err != nil {
 		return err
 	}
-	//if errWait != nil {
-	//	return errWait
-	//}
+	if errWait != nil {
+		return errWait
+	}
 
 	return nil
 }
 
-func isJobComplete(e *endpoint, ctx context.Context, jobName string, namespace string) wait.ConditionFunc {
-	return func() (bool, error) {
-		var job v12.Job
+func (e *endpoint) isJobComplete(ctx context.Context, jobName string, namespace string) (bool, error) {
+	var job v12.Job
 
-		err := e.Reader.Get(ctx, client2.ObjectKey{
-			Namespace: jobName,
-			Name:      namespace,
-		}, &job)
+	e.Log.Info("Checking if Job with name: " + jobName + " in namespace: " + namespace + " is complete")
 
-		if err != nil {
-			return false, err
-		}
+	err := e.Reader.Get(ctx, client2.ObjectKey{
+		Namespace: namespace,
+		Name:      jobName,
+	}, &job)
 
-		for _, condition := range job.Status.Conditions {
-			if condition.Type == v12.JobComplete {
-				return true, nil
-			}
-		}
-
-		return false, nil
+	if err != nil {
+		e.Log.Error(err, "failed to get job")
+		return false, err
 	}
+
+	for _, condition := range job.Status.Conditions {
+		if condition.Type == v12.JobComplete {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (e *endpoint) WaitForJob(ctx context.Context, job v12.Job) error {
-	return wait.PollImmediate(time.Second, 60, isJobComplete(e, ctx, job.Name, job.Namespace))
+	var completed = false
+	var jobCompleteErr error = nil
+
+	for !completed {
+		time.Sleep(500 * time.Millisecond)
+		completed, jobCompleteErr = e.isJobComplete(ctx, job.Name, job.Namespace)
+		if jobCompleteErr != nil {
+			completed = true
+		}
+	}
+	return jobCompleteErr
 }
 
 func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobName string, command string, filename string) v12.Job {
