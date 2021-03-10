@@ -69,7 +69,7 @@ func (b *ProcessBuilder) BuildNsEnter(pid uint32, uid int64, gid int64) *Managed
 	args := b.args
 	cmd := b.cmd
 
-	args = append([]string{"-G", strconv.Itoa(int(gid)),"-S", strconv.Itoa(int(uid)), "--target", strconv.Itoa(int(pid)), "--mount", "--uts", "--ipc", "--net", "--pid", "--", cmd}, args...)
+	args = append([]string{"-G", strconv.Itoa(int(gid)), "-S", strconv.Itoa(int(uid)), "--target", strconv.Itoa(int(pid)), "--mount", "--uts", "--ipc", "--net", "--pid", "--", cmd}, args...)
 
 	cmd = "nsenter"
 

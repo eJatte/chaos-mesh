@@ -3,12 +3,16 @@ package deletefile
 import (
 	"context"
 	"errors"
+	"time"
+
+	"k8s.io/apimachinery/pkg/util/wait"
+	client2 "sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/chaos-mesh/chaos-mesh/controllers/config"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/client"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/chaos-mesh/chaos-mesh/pkg/events"
 	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
-	"time"
 
 	v12 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -54,9 +58,10 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		e.Log.Info("Created file")
 	} else {
 		e.Log.Error(err, "Failed to create file")
+		return err
 	}
 
-	time.Sleep(10 * time.Second)
+	//time.Sleep(10 * time.Second)
 
 	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
 	if err != nil {
@@ -120,6 +125,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			e.Log.Info("Deleted file")
 		} else {
 			e.Log.Error(err, "Failed to delete file")
+			return err
 		}
 	}
 
@@ -128,12 +134,68 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 func (e *endpoint) CreateDummyFile(ctx context.Context, uid int64, gid int64, pvClaim string, filename string) error {
 	job := e.GetJobTemplate(uid, gid, pvClaim, "create-file-job", "touch", filename)
-	return e.Create(ctx, &job)
+	return e.RunJob(ctx, job)
 }
 
 func (e *endpoint) DeleteDummyFile(ctx context.Context, uid int64, gid int64, pvClaim string, filename string) error {
 	job := e.GetJobTemplate(uid, gid, pvClaim, "delete-file-job", "rm", filename)
-	return e.Create(ctx, &job)
+	return e.RunJob(ctx, job)
+}
+
+type PropagationOptions struct {}
+
+func (p PropagationOptions) ApplyToDelete(options *client2.DeleteOptions) {
+	var prop = metav1.DeletePropagationForeground
+	options.PropagationPolicy = &prop
+}
+
+func (e *endpoint) RunJob(ctx context.Context, job v12.Job) error {
+	err := e.Create(ctx, &job)
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(10 * time.Second)
+	//errWait := e.WaitForJob(ctx, job)
+
+	var p PropagationOptions
+
+	err = e.Delete(ctx, &job, p)
+	if err != nil {
+		return err
+	}
+	//if errWait != nil {
+	//	return errWait
+	//}
+
+	return nil
+}
+
+func isJobComplete(e *endpoint, ctx context.Context, jobName string, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		var job v12.Job
+
+		err := e.Reader.Get(ctx, client2.ObjectKey{
+			Namespace: jobName,
+			Name:      namespace,
+		}, &job)
+
+		if err != nil {
+			return false, err
+		}
+
+		for _, condition := range job.Status.Conditions {
+			if condition.Type == v12.JobComplete {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	}
+}
+
+func (e *endpoint) WaitForJob(ctx context.Context, job v12.Job) error {
+	return wait.PollImmediate(time.Second, 60, isJobComplete(e, ctx, job.Name, job.Namespace))
 }
 
 func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobName string, command string, filename string) v12.Job {

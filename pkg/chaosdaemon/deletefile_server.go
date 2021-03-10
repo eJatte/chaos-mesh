@@ -29,59 +29,7 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 		attackSuccessful = false
 	}
 
-	/*log.Info(fmt.Sprintf("Creating file %s", filePath))
-	cmd := bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("echo 'hello friend' >> %s", filePath)).
-		SetContext(ctx).
-		BuildNsEnter(pid, 0)
-	out, err := cmd.Output()
-	if err != nil {
-		log.Error(err, "Failed to create file.")
-		return nil, err
-	}
-
-	log.Info("Executing ls")
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd %s && ls", req.PvClaim)).
-		SetContext(ctx).
-		BuildNsEnter(pid, 0)
-	out, err = cmd.Output()
-	if err != nil {
-		log.Error(err, "Failed to execute ls")
-	}
-	if len(out) != 0 {
-		log.Info("cmd output", "output", string(out))
-	}
-
-	log.Info(fmt.Sprintf("Deleting file %s as user %d", filePath, req.Uid))
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("rm -rf %s", filePath)).
-		SetContext(ctx).
-		BuildNsEnter(pid, req.Uid)
-	out, err = cmd.Output()
-	if err != nil {
-		log.Info("Failed to delete file")
-	}
-
-	log.Info(fmt.Sprintf("Deleting file %s", filePath))
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("rm -rf %s", filePath)).
-		SetContext(ctx).
-		BuildNsEnter(pid, 0)
-	out, err = cmd.Output()
-	if err != nil {
-		log.Error(err, "Failed to delete file as root")
-	}
-
-	log.Info("Executing ls")
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd %s && ls", req.PvClaim)).
-		SetContext(ctx).
-		BuildNsEnter(pid, 0)
-	out, err = cmd.Output()
-	if err != nil {
-		log.Error(err, "Failed to execute ls")
-	}
-	if len(out) != 0 {
-		log.Info("cmd output", "output", string(out))
-	}*/
-
 	return &pb.DeleteFileResponse{
-		AttackSuccessful:     attackSuccessful,
+		AttackSuccessful: attackSuccessful,
 	}, nil
 }
