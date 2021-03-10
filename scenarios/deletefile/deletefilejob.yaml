@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: create-file-job
+  name: delete-file-job
 spec:
   template:
     spec:
@@ -14,7 +14,7 @@ spec:
           persistentVolumeClaim:
             claimName: delete-file-pv-claim
       containers:
-      - name: create-file-container
+      - name: delete-file-container
         image: busybox
         command: ["rm"]
         args: ["super/data/dummyfile"]
