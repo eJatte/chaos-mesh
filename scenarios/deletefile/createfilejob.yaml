@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-file-job
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1234
+        fsGroup: 1234
+      volumes:
+        - name: delete-file-pv-storage
+          persistentVolumeClaim:
+            claimName: delete-file-pv-claim
+      containers:
+      - name: create-file-container
+        image: busybox
+        command: ["touch"]
+        args: ["super/data/dummyfile"]
+        volumeMounts:
+          - mountPath: "/super/data"
+            name: delete-file-pv-storage
+      restartPolicy: Never
+  backoffLimit: 1
