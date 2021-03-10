@@ -57,4 +57,4 @@ spec:
         volumeMounts:
           - mountPath: "/super/data"
             name: delete-file-pv-storage
-            #readOnly: true
+            readOnly: true

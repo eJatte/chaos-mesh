@@ -44,7 +44,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
-	//pvClaimName := "delete-file-pv-claim"
+	var attackSuccessful = false
 
 	filename := "dummyfile"
 
@@ -91,81 +91,37 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			return err
 		}
 
-		if response.AttackSuccessful {
-			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
-			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
-
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Deleted file. Attack succeeded.")
-		} else {
-			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
-			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
-
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to delete file. Attack failed.")
-		}
+		attackSuccessful = response.AttackSuccessful
 	} else {
 		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "no pods selected")
 		e.Log.Error(err, "no pods selected")
-		return err
-	}
-
-	err = e.DeleteDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
-	if err == nil {
-		e.Log.Info("Deleted file")
-	} else {
-		e.Log.Error(err, "Failed to delete file")
-	}
-
-	/*e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
-
-	e.Log.Info("Select and filter pods")
-	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
-	if err != nil {
-		e.Log.Error(err, "failed to select and filter pods")
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to select and filter pods")
-		return err
-	}
-
-	if len(pods) > 0 {
-		pod := pods[0]
-
-		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
-		if err != nil {
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to get chaos daemon client")
-			e.Log.Error(err, "failed to get chaos daemon client")
-			return err
-		}
-		defer daemonClient.Close()
-
-		containerID := pod.Status.ContainerStatuses[0].ContainerID
-
-		response, err := daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
-			ContainerId:   containerID,
-			PvClaim: securitychaos.Spec.PvClaim,
-			Uid:           securitychaos.Spec.UID,
-		})
-
-		if err != nil {
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Error when deleting file")
-			e.Log.Error(err, "Error when deleting file")
-			return err
-		}
-
-		if response.AttackSuccessful {
-			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
-			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
-
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Deleted file. Attack succeeded.")
+		errDelete := e.DeleteDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
+		if errDelete == nil {
+			e.Log.Info("Deleted file")
 		} else {
-			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
-			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
-
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to delete file. Attack failed.")
+			e.Log.Error(errDelete, "Failed to delete file")
 		}
-	} else {
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "no pods selected")
-		e.Log.Error(err, "no pods selected")
 		return err
-	}*/
+	}
+
+	if attackSuccessful {
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
+		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Deleted file. Attack succeeded.")
+	} else {
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
+		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to delete file. Attack failed.")
+
+		err = e.DeleteDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
+		if err == nil {
+			e.Log.Info("Deleted file")
+		} else {
+			e.Log.Error(err, "Failed to delete file")
+		}
+	}
 
 	return nil
 }
