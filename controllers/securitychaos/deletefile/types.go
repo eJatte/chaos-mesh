@@ -3,16 +3,16 @@ package deletefile
 import (
 	"context"
 	"errors"
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+	"github.com/chaos-mesh/chaos-mesh/pkg/router"
+	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
+	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
 	v12 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-	"github.com/chaos-mesh/chaos-mesh/pkg/router"
-	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
-	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
+	"time"
 )
 
 type endpoint struct {
@@ -37,12 +37,23 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	//pvClaimName := "delete-file-pv-claim"
 
+
 	err := e.CreateDummyFile(ctx)
 
 	if err == nil {
 		e.Log.Info("Created file")
 	} else {
 		e.Log.Error(err,"Failed to create file")
+	}
+
+	time.Sleep(10*time.Second)
+
+	err = e.DeleteDummyFile(ctx)
+
+	if err == nil {
+		e.Log.Info("Deleted file")
+	} else {
+		e.Log.Error(err,"Failed to delete file")
 	}
 
 	/*e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
@@ -105,13 +116,32 @@ func (e *endpoint) CreateDummyFile(ctx context.Context) error {
 	var group int64 = 1234
 	pvClaim := "delete-file-pv-claim"
 
-	job := v12.Job{
+	job := e.GetJobTemplate(user, group, pvClaim, "create-file-job", "touch")
+
+	return e.Create(ctx, &job)
+}
+
+func (e *endpoint) DeleteDummyFile(ctx context.Context) error {
+	var user int64 = 1000
+	var group int64 = 1234
+	pvClaim := "delete-file-pv-claim"
+
+	job := e.GetJobTemplate(user, group, pvClaim, "delete-file-job", "rm")
+
+	return e.Create(ctx, &job)
+}
+
+func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobName string, command string) v12.Job {
+	mountpath := "/dummyfolder/data"
+	filename := "dummyfile"
+
+	return v12.Job{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Job",
 			APIVersion: "batch/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "create-file-job",
+			Name: jobName,
 			Namespace: "default",
 		},
 		Spec: v12.JobSpec{
@@ -123,7 +153,7 @@ func (e *endpoint) CreateDummyFile(ctx context.Context) error {
 						FSGroup:    &group,
 					},
 					Volumes: []v1.Volume{{
-						Name:         "delete-file-pv-storage",
+						Name:         "pv-storage",
 						VolumeSource: v1.VolumeSource{
 							PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 								ClaimName: pvClaim,
@@ -134,11 +164,11 @@ func (e *endpoint) CreateDummyFile(ctx context.Context) error {
 						{
 							Name:  "create-file-container",
 							Image: "busybox",
-							Command: []string{"touch"} ,
-							Args: []string{"super/data/dummyfile"} ,
+							Command: []string{command} ,
+							Args: []string{mountpath+"/"+filename} ,
 							VolumeMounts: []v1.VolumeMount{{
-								Name:             "delete-file-pv-storage",
-								MountPath:        "/super/data",
+								Name:             "pv-storage",
+								MountPath:        mountpath,
 							}},
 						},
 					},
@@ -147,8 +177,6 @@ func (e *endpoint) CreateDummyFile(ctx context.Context) error {
 			},
 		},
 	}
-
-	return e.Create(ctx, &job)
 }
 
 func (e *endpoint) Recover(ctx context.Context, req ctrl.Request, chaos v1alpha1.InnerObject) error {

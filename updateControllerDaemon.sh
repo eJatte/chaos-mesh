@@ -10,3 +10,5 @@ minikube delete
 minikube start
 ./loadimages_minikube.sh
 ./installchaosmesh_helm.sh
+kubectl apply -f service_account_cr.yaml
+kubectl apply -f service_account_crb.yaml
