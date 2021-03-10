@@ -3190,13 +3190,14 @@ spec:
               - delete-file
               - test
               type: string
-            directorypath:
-              description: DirectoryPath specified the path of a directory, needed
-                in delete file experiment
-              type: string
             duration:
               description: Duration represents the duration of the chaos action
               type: string
+            gid:
+              description: GID specifies the gid to use in the experiment, needed
+                in delete file experiment.
+              format: int64
+              type: integer
             mode:
               description: 'Mode defines the mode to run chaos action. Supported mode:
                 one / all / fixed / fixed-percent / random-max-percent'
@@ -3210,6 +3211,9 @@ spec:
             namespace:
               description: 'NameSpace defines the namespace that the chaos experiment
                 should be applied in. Default namespace: default'
+              type: string
+            pvclaim:
+              description: PvClaim specifies the persistent volume claim.
               type: string
             scheduler:
               description: Scheduler defines some schedule rules to control the running
@@ -3315,7 +3319,7 @@ spec:
             uid:
               description: UID specifies the uid to use in the experiment, needed
                 in delete file experiment.
-              format: int32
+              format: int64
               type: integer
             value:
               description: Value is required when the mode is set to `FixedPodMode`
@@ -3324,6 +3328,10 @@ spec:
                 provide a number from 0-100 to specify the percent of pods the server
                 can do chaos action. IF `RandomMaxPercentPodMod`,  provide a number
                 from 0-100 to specify the max percent of pods to do chaos action
+              type: string
+            volumemountpath:
+              description: VolumeMountPath specifies the mount path of the volume
+                of the target container
               type: string
           required:
           - action

@@ -7,7 +7,9 @@ spec:
   action: delete-file
   mode: one
   uid: 1000
-  directorypath: super/data/
+  gid: 1234
+  pvclaim: "delete-file-pv-claim"
+  volumemountpath: "super/data/"
   selector:
     labelSelectors:
       'app': 'delete-file-pod'

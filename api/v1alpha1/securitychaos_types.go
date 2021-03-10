@@ -76,13 +76,21 @@ type SecurityChaosSpec struct {
 	// +optional
 	Value string `json:"value"`
 
-	// DirectoryPath specified the path of a directory, needed in delete file experiment
+	// PvClaim specifies the persistent volume claim.
 	// +optional
-	DirectoryPath string `json:"directorypath"`
+	PvClaim string `json:"pvclaim"`
+
+	// VolumeMountPath specifies the mount path of the volume of the target container
+	// +optional
+	VolumeMountPath string `json:"volumemountpath"`
 
 	// UID specifies the uid to use in the experiment, needed in delete file experiment.
 	// +optional
-	UID uint32 `json:"uid"`
+	UID int64 `json:"uid"`
+
+	// GID specifies the gid to use in the experiment, needed in delete file experiment.
+	// +optional
+	GID int64 `json:"gid"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos

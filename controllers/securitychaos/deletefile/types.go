@@ -3,16 +3,23 @@ package deletefile
 import (
 	"context"
 	"errors"
-	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-	"github.com/chaos-mesh/chaos-mesh/pkg/router"
-	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
-	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
+	"github.com/chaos-mesh/chaos-mesh/controllers/config"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/client"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-mesh/pkg/events"
+	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
+	"time"
+
 	v12 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"time"
+
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+	"github.com/chaos-mesh/chaos-mesh/pkg/router"
+	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
+	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
 )
 
 type endpoint struct {
@@ -28,32 +35,84 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
-	if len(securitychaos.Spec.DirectoryPath) == 0 {
+	if len(securitychaos.Spec.PvClaim) == 0 {
 		msg := "need to specify a directory path"
 		err := errors.New(msg)
 		e.Log.Error(err, msg)
 		return err
 	}
 
+	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
+
 	//pvClaimName := "delete-file-pv-claim"
 
+	filename := "dummyfile"
 
-	err := e.CreateDummyFile(ctx)
+	err := e.CreateDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
 
 	if err == nil {
 		e.Log.Info("Created file")
 	} else {
-		e.Log.Error(err,"Failed to create file")
+		e.Log.Error(err, "Failed to create file")
 	}
 
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 
-	err = e.DeleteDummyFile(ctx)
+	pods, err := selector.SelectAndFilterPods(ctx, e.Client, e.Reader, &securitychaos.Spec, config.ControllerCfg.ClusterScoped, config.ControllerCfg.TargetNamespace, config.ControllerCfg.AllowedNamespaces, config.ControllerCfg.IgnoredNamespaces)
+	if err != nil {
+		e.Log.Error(err, "failed to select and filter pods")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to select and filter pods")
+		return err
+	}
 
+	if len(pods) > 0 {
+		pod := pods[0]
+
+		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
+		if err != nil {
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to get chaos daemon client")
+			e.Log.Error(err, "failed to get chaos daemon client")
+			return err
+		}
+		defer daemonClient.Close()
+
+		containerID := pod.Status.ContainerStatuses[0].ContainerID
+
+		response, err := daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
+			ContainerId: containerID,
+			FilePath:    securitychaos.Spec.VolumeMountPath + filename,
+			Uid:         securitychaos.Spec.UID,
+			Gid:         securitychaos.Spec.GID,
+		})
+
+		if err != nil {
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Error when deleting file")
+			e.Log.Error(err, "Error when deleting file")
+			return err
+		}
+
+		if response.AttackSuccessful {
+			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
+			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Deleted file. Attack succeeded.")
+		} else {
+			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
+			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to delete file. Attack failed.")
+		}
+	} else {
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "no pods selected")
+		e.Log.Error(err, "no pods selected")
+		return err
+	}
+
+	err = e.DeleteDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
 	if err == nil {
 		e.Log.Info("Deleted file")
 	} else {
-		e.Log.Error(err,"Failed to delete file")
+		e.Log.Error(err, "Failed to delete file")
 	}
 
 	/*e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
@@ -81,7 +140,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 		response, err := daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
 			ContainerId:   containerID,
-			DirectoryPath: securitychaos.Spec.DirectoryPath,
+			PvClaim: securitychaos.Spec.PvClaim,
 			Uid:           securitychaos.Spec.UID,
 		})
 
@@ -111,29 +170,18 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	return nil
 }
 
-func (e *endpoint) CreateDummyFile(ctx context.Context) error {
-	var user int64 = 1000
-	var group int64 = 1234
-	pvClaim := "delete-file-pv-claim"
-
-	job := e.GetJobTemplate(user, group, pvClaim, "create-file-job", "touch")
-
+func (e *endpoint) CreateDummyFile(ctx context.Context, uid int64, gid int64, pvClaim string, filename string) error {
+	job := e.GetJobTemplate(uid, gid, pvClaim, "create-file-job", "touch", filename)
 	return e.Create(ctx, &job)
 }
 
-func (e *endpoint) DeleteDummyFile(ctx context.Context) error {
-	var user int64 = 1000
-	var group int64 = 1234
-	pvClaim := "delete-file-pv-claim"
-
-	job := e.GetJobTemplate(user, group, pvClaim, "delete-file-job", "rm")
-
+func (e *endpoint) DeleteDummyFile(ctx context.Context, uid int64, gid int64, pvClaim string, filename string) error {
+	job := e.GetJobTemplate(uid, gid, pvClaim, "delete-file-job", "rm", filename)
 	return e.Create(ctx, &job)
 }
 
-func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobName string, command string) v12.Job {
+func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobName string, command string, filename string) v12.Job {
 	mountpath := "/dummyfolder/data"
-	filename := "dummyfile"
 
 	return v12.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -141,7 +189,7 @@ func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobNa
 			APIVersion: "batch/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: jobName,
+			Name:      jobName,
 			Namespace: "default",
 		},
 		Spec: v12.JobSpec{
@@ -153,7 +201,7 @@ func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobNa
 						FSGroup:    &group,
 					},
 					Volumes: []v1.Volume{{
-						Name:         "pv-storage",
+						Name: "pv-storage",
 						VolumeSource: v1.VolumeSource{
 							PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 								ClaimName: pvClaim,
@@ -162,13 +210,13 @@ func (e *endpoint) GetJobTemplate(user int64, group int64, pvClaim string, jobNa
 					}},
 					Containers: []v1.Container{
 						{
-							Name:  "create-file-container",
-							Image: "busybox",
-							Command: []string{command} ,
-							Args: []string{mountpath+"/"+filename} ,
+							Name:    "create-file-container",
+							Image:   "busybox",
+							Command: []string{command},
+							Args:    []string{mountpath + "/" + filename},
 							VolumeMounts: []v1.VolumeMount{{
-								Name:             "pv-storage",
-								MountPath:        mountpath,
+								Name:      "pv-storage",
+								MountPath: mountpath,
 							}},
 						},
 					},

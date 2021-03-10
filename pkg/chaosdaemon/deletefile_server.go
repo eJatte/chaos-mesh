@@ -4,25 +4,32 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 
 	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )
 
-func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest) (*empty.Empty, error) {
+func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest) (*pb.DeleteFileResponse, error) {
 	log.Info("DeleteFile", "request", req)
 
 	pid, err := s.crClient.GetPidFromContainerID(ctx, req.ContainerId)
 	if err != nil {
-		log.Error(err, "Failed to get Pid from container id bla bla <"+req.ContainerId+">")
+		log.Error(err, "Failed to get pid from container id <"+req.ContainerId+">")
 		return nil, err
 	}
-	fileName := "dummyfile"
-	filePath := fmt.Sprintf("%s%s", req.DirectoryPath, fileName)
+	var attackSuccessful = true
 
-	log.Info(fmt.Sprintf("Creating file %s", filePath))
+	log.Info(fmt.Sprintf("Deleting file %s as uid %d and gid %d", req.FilePath, req.Uid, req.Gid))
+	cmd := bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("rm -rf %s", req.FilePath)).
+		SetContext(ctx).
+		BuildNsEnter(pid, req.Uid, req.Gid)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Info("Failed to delete file")
+		attackSuccessful = false
+	}
+
+	/*log.Info(fmt.Sprintf("Creating file %s", filePath))
 	cmd := bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("echo 'hello friend' >> %s", filePath)).
 		SetContext(ctx).
 		BuildNsEnter(pid, 0)
@@ -33,7 +40,7 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 	}
 
 	log.Info("Executing ls")
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd %s && ls", req.DirectoryPath)).
+	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd %s && ls", req.PvClaim)).
 		SetContext(ctx).
 		BuildNsEnter(pid, 0)
 	out, err = cmd.Output()
@@ -63,7 +70,7 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 	}
 
 	log.Info("Executing ls")
-	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd %s && ls", req.DirectoryPath)).
+	cmd = bpm.DefaultProcessBuilder("sh", "-c", fmt.Sprintf("cd %s && ls", req.PvClaim)).
 		SetContext(ctx).
 		BuildNsEnter(pid, 0)
 	out, err = cmd.Output()
@@ -72,7 +79,9 @@ func (s *DaemonServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest
 	}
 	if len(out) != 0 {
 		log.Info("cmd output", "output", string(out))
-	}
+	}*/
 
-	return &empty.Empty{}, nil
+	return &pb.DeleteFileResponse{
+		AttackSuccessful:     attackSuccessful,
+	}, nil
 }
