@@ -3,7 +3,7 @@ kind: PersistentVolume
 metadata:
   name: delete-file-pv-volume
   annotations:
-    pv.beta.kubernetes.io/gid: "1234"
+    #pv.beta.kubernetes.io/gid: "1234"
   labels:
     type: local
 spec:
@@ -57,4 +57,4 @@ spec:
         volumeMounts:
           - mountPath: "/super/data"
             name: delete-file-pv-storage
-            readOnly: true
+            #readOnly: true

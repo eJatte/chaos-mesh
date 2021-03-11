@@ -9,7 +9,6 @@ spec:
   uid: 1000
   gid: 1234
   pvclaim: "delete-file-pv-claim"
-  volumemountpath: "super/data/"
   selector:
     labelSelectors:
       'app': 'delete-file-pod'

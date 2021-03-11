@@ -3,6 +3,7 @@ package deletefile
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,13 +46,23 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
+	var uid int64 = 1000
+	var gid int64 = 1000
+
+	if securitychaos.Spec.UID > 0 {
+		uid = securitychaos.Spec.UID
+	}
+	if securitychaos.Spec.GID > 0 {
+		gid = securitychaos.Spec.GID
+	}
+
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
 	var attackSuccessful = false
 
 	filename := "dummyfile"
 
-	err := e.CreateDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
+	err := e.CreateDummyFile(ctx, uid, gid, securitychaos.Spec.PvClaim, filename)
 
 	if err == nil {
 		e.Log.Info("Created file")
@@ -70,6 +81,24 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	if len(pods) > 0 {
 		pod := pods[0]
 
+		volumeName, err := GetVolumeNameFromPvClaim(pod, securitychaos.Spec.PvClaim)
+		if err != nil {
+			e.Log.Error(err, "Pod does not have specified pv claim")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Pod does not have specified pv claim")
+			return err
+		}
+
+		mountPath, err := GetContainerMountPathFromPvClaim(pod.Spec.Containers[0], volumeName)
+		if err != nil {
+			e.Log.Error(err, "Container has not mounted volume")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Container has not mounted volume")
+			return err
+		}
+
+		if !strings.HasSuffix(mountPath, "/") {
+			mountPath = mountPath+"/"
+		}
+
 		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
 		if err != nil {
 			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to get chaos daemon client")
@@ -82,9 +111,9 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 		response, err := daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
 			ContainerId: containerID,
-			FilePath:    securitychaos.Spec.VolumeMountPath + filename,
-			Uid:         securitychaos.Spec.UID,
-			Gid:         securitychaos.Spec.GID,
+			FilePath:    mountPath + filename,
+			Uid:         uid,
+			Gid:         gid,
 		})
 
 		if err != nil {
@@ -97,7 +126,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	} else {
 		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "no pods selected")
 		e.Log.Error(err, "no pods selected")
-		errDelete := e.DeleteDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
+		errDelete := e.DeleteDummyFile(ctx, uid, gid, securitychaos.Spec.PvClaim, filename)
 		if errDelete == nil {
 			e.Log.Info("Deleted file")
 		} else {
@@ -117,7 +146,7 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to delete file. Attack failed.")
 
-		err = e.DeleteDummyFile(ctx, securitychaos.Spec.UID, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
+		err = e.DeleteDummyFile(ctx, uid, securitychaos.Spec.GID, securitychaos.Spec.PvClaim, filename)
 		if err == nil {
 			e.Log.Info("Deleted file")
 		} else {
@@ -127,6 +156,31 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	}
 
 	return nil
+}
+
+func GetContainerMountPathFromPvClaim(container v1.Container, volumeName string) (string, error) {
+	for _, volumeMount := range container.VolumeMounts {
+		if volumeMount.Name == volumeName {
+			return volumeMount.MountPath, nil
+		}
+	}
+	msg := "Container has not mounted volume"
+	err := errors.New(msg)
+
+	return "", err
+}
+
+func GetVolumeNameFromPvClaim(pod v1.Pod, pvClaimName string) (string, error) {
+	for _, volume := range pod.Spec.Volumes {
+		if volume.PersistentVolumeClaim.ClaimName == pvClaimName {
+			return volume.Name, nil
+		}
+	}
+
+	msg := "Pod does not have volume with specified claim"
+	err := errors.New(msg)
+
+	return "", err
 }
 
 func (e *endpoint) CreateDummyFile(ctx context.Context, uid int64, gid int64, pvClaim string, filename string) error {

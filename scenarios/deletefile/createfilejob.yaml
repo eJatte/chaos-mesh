@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       securityContext:
-        runAsUser: 1000
+        runAsUser: 1234
         runAsGroup: 1234
         fsGroup: 1234
       volumes:

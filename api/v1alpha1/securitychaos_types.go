@@ -80,10 +80,6 @@ type SecurityChaosSpec struct {
 	// +optional
 	PvClaim string `json:"pvclaim"`
 
-	// VolumeMountPath specifies the mount path of the volume of the target container
-	// +optional
-	VolumeMountPath string `json:"volumemountpath"`
-
 	// UID specifies the uid to use in the experiment, needed in delete file experiment.
 	// +optional
 	UID int64 `json:"uid"`

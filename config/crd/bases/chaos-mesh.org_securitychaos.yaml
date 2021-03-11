@@ -185,10 +185,6 @@ spec:
                 can do chaos action. IF `RandomMaxPercentPodMod`,  provide a number
                 from 0-100 to specify the max percent of pods to do chaos action
               type: string
-            volumemountpath:
-              description: VolumeMountPath specifies the mount path of the volume
-                of the target container
-              type: string
           required:
           - action
           type: object
