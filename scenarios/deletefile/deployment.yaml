@@ -43,7 +43,7 @@ spec:
         app: delete-file-pod
     spec:
       securityContext:
-        runAsUser: 1000
+        runAsUser: 1001
         runAsGroup: 1234
         fsGroup: 1234
       volumes:

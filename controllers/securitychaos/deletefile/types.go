@@ -3,14 +3,14 @@ package deletefile
 import (
 	"context"
 	"errors"
+	"fmt"
+	cm "github.com/chaos-mesh/chaos-mesh/pkg/chaosctl/common"
 	"strings"
 	"time"
 
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/chaos-mesh/chaos-mesh/controllers/config"
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/client"
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/chaos-mesh/chaos-mesh/pkg/events"
 	"github.com/chaos-mesh/chaos-mesh/pkg/selector"
 
@@ -96,33 +96,25 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		}
 
 		if !strings.HasSuffix(mountPath, "/") {
-			mountPath = mountPath+"/"
+			mountPath = mountPath + "/"
 		}
 
-		daemonClient, err := client.NewChaosDaemonClient(ctx, e.Client, &pod, config.ControllerCfg.ChaosDaemonPort)
+		clientSet, err := cm.InitClientSet()
 		if err != nil {
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "failed to get chaos daemon client")
-			e.Log.Error(err, "failed to get chaos daemon client")
-			return err
-		}
-		defer daemonClient.Close()
-
-		containerID := pod.Status.ContainerStatuses[0].ContainerID
-
-		response, err := daemonClient.DeleteFile(ctx, &pb.DeleteFileRequest{
-			ContainerId: containerID,
-			FilePath:    mountPath + filename,
-			Uid:         uid,
-			Gid:         gid,
-		})
-
-		if err != nil {
-			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Error when deleting file")
-			e.Log.Error(err, "Error when deleting file")
+			e.Log.Error(err, "Failed to init a client set")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to init a client set")
 			return err
 		}
 
-		attackSuccessful = response.AttackSuccessful
+		cmd := fmt.Sprintf("rm -rf %s", mountPath + filename)
+
+		_, err = cm.Exec(ctx, pod, cmd, clientSet.KubeCli)
+		if err != nil {
+			e.Log.Info("Failed to remove file from container")
+			attackSuccessful = false
+		} else {
+			attackSuccessful = true
+		}
 	} else {
 		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "no pods selected")
 		e.Log.Error(err, "no pods selected")
