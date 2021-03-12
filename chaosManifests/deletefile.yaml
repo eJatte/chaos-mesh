@@ -5,10 +5,9 @@ metadata:
   namespace: chaos-testing
 spec:
   action: delete-file
-  mode: one
-  uid: 1000
   gid: 1234
   pvclaim: "delete-file-pv-claim"
+  mode: one
   selector:
     labelSelectors:
       'app': 'delete-file-pod'

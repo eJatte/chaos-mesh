@@ -1,0 +1,158 @@
+Runtime:
+[
+    {
+        "uid": "f340a44c-e1a2-4769-9549-4e8089b32bff",
+        "kind": "SecurityChaos",
+        "namespace": "chaos-testing",
+        "name": "security-chaos-delete-file",
+        "action": "delete-file",
+        "start_time": "2021-03-12T12:31:14Z",
+        "finish_time": "2021-03-12T12:35:26.391345915Z"
+    }
+]
+Results:
+[
+    {
+        "id": 1,
+        "created_at": "2021-03-12T12:31:19.42557641Z",
+        "updated_at": "2021-03-12T12:31:19.434299396Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-delete-file",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "delete-file",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-12T12:31:14Z",
+        "finish_time": "2021-03-12T12:31:19Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "f340a44c-e1a2-4769-9549-4e8089b32bff"
+    },
+    {
+        "id": 2,
+        "created_at": "2021-03-12T12:32:18.656714899Z",
+        "updated_at": "2021-03-12T12:32:18.664772836Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-delete-file",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "delete-file",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-12T12:32:14Z",
+        "finish_time": "2021-03-12T12:32:18Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "f340a44c-e1a2-4769-9549-4e8089b32bff"
+    },
+    {
+        "id": 3,
+        "created_at": "2021-03-12T12:33:18.142198185Z",
+        "updated_at": "2021-03-12T12:33:18.149992226Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-delete-file",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "delete-file",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-12T12:33:14Z",
+        "finish_time": "2021-03-12T12:33:18Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "f340a44c-e1a2-4769-9549-4e8089b32bff"
+    },
+    {
+        "id": 4,
+        "created_at": "2021-03-12T12:34:18.642961181Z",
+        "updated_at": "2021-03-12T12:34:18.650277028Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-delete-file",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "delete-file",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-12T12:34:14Z",
+        "finish_time": "2021-03-12T12:34:18Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "f340a44c-e1a2-4769-9549-4e8089b32bff"
+    },
+    {
+        "id": 5,
+        "created_at": "2021-03-12T12:35:18.136612621Z",
+        "updated_at": "2021-03-12T12:35:18.142153043Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-delete-file",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "delete-file",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-12T12:35:14Z",
+        "finish_time": "2021-03-12T12:35:18Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "f340a44c-e1a2-4769-9549-4e8089b32bff"
+    }
+]
+Spec:
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: delete-file-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: delete-file-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delete-file-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: delete-file-pod
+  template:
+    metadata:
+      labels:
+        app: delete-file-pod
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1234
+        fsGroup: 1234
+      volumes:
+        - name: delete-file-pv-storage
+          persistentVolumeClaim:
+            claimName: delete-file-pv-claim
+      containers:
+      - name: delete-file-container
+        image: busybox
+        command: [ "sh", "-c", "sleep 1h" ]
+        volumeMounts:
+          - mountPath: "/super/data"
+            name: delete-file-pv-storage
