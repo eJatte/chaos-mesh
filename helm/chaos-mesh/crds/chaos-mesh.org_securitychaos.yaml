@@ -57,12 +57,6 @@ spec:
             mode:
               description: 'Mode defines the mode to run chaos action. Supported mode:
                 one / all / fixed / fixed-percent / random-max-percent'
-              enum:
-              - one
-              - all
-              - fixed
-              - fixed-percent
-              - random-max-percent
               type: string
             namespace:
               description: 'NameSpace defines the namespace that the chaos experiment

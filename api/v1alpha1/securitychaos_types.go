@@ -65,7 +65,6 @@ type SecurityChaosSpec struct {
 
 	// Mode defines the mode to run chaos action.
 	// Supported mode: one / all / fixed / fixed-percent / random-max-percent
-	// +kubebuilder:validation:Enum=one;all;fixed;fixed-percent;random-max-percent
 	// +optional
 	Mode PodMode `json:"mode"`
 
