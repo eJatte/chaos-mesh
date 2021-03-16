@@ -41,11 +41,9 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
-	//secretReq := clientSet.KubeCli.RESTClient().Get().Resource("pods").Context(ctx).Namespace("chaos-testing")
-
 	secretReq := clientSet.KubeCli.CoreV1().RESTClient().Get().
-		Resource("pods").
-		Namespace("chaos-testing").
+		Resource("secrets").
+		Namespace("default").
 		SetHeader("Impersonate-User", "orion")
 
 	e.Log.Info("Attempting to execute request with URL: " + secretReq.URL().String())
@@ -61,16 +59,16 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 	e.Log.Info("Status: " + strconv.Itoa(statusCode))
 
 	if statusCode != http.StatusOK {
-		e.Log.Info("COULD NOT GET PODS")
+		e.Log.Info("COULD NOT GET SECRETS")
 		if err != nil {
-			e.Log.Error(err, "Error when gettigs pods")
+			e.Log.Error(err, "Error when getting secrets")
 		}
 	} else {
-		e.Log.Info("COULD GET PODS")
-		var pods = resObject.(*v1.PodList)
+		e.Log.Info("COULD GET SECRETS")
+		var secrets = resObject.(*v1.SecretList)
 
-		for _, p := range pods.Items {
-			e.Log.Info("POD: " + p.Name)
+		for _, secret := range secrets.Items {
+			e.Log.Info("SECRET: " + secret.Name)
 		}
 	}
 
