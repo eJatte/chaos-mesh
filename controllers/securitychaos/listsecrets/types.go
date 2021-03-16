@@ -3,6 +3,9 @@ package listsecrets
 import (
 	"context"
 	"errors"
+	cm "github.com/chaos-mesh/chaos-mesh/pkg/chaosctl/common"
+	"net/http"
+	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,6 +34,45 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
+	clientSet, err := cm.InitClientSet()
+	if err != nil {
+		e.Log.Error(err, "Failed to init a client set")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to init a client set")
+		return err
+	}
+
+	//secretReq := clientSet.KubeCli.RESTClient().Get().Resource("pods").Context(ctx).Namespace("chaos-testing")
+
+	secretReq := clientSet.KubeCli.CoreV1().RESTClient().Get().
+		Resource("pods").
+		Namespace("chaos-testing").
+		SetHeader("Impersonate-User", "orion")
+
+	e.Log.Info("Attempting to execute request with URL: " + secretReq.URL().String())
+
+	res := secretReq.Do()
+
+	var statusCode int
+
+	res.StatusCode(&statusCode)
+
+	resObject, err := res.Get()
+
+	e.Log.Info("Status: " + strconv.Itoa(statusCode))
+
+	if statusCode != http.StatusOK {
+		e.Log.Info("COULD NOT GET PODS")
+		if err != nil {
+			e.Log.Error(err, "Error when gettigs pods")
+		}
+	} else {
+		e.Log.Info("COULD GET PODS")
+		var pods = resObject.(*v1.PodList)
+
+		for _, p := range pods.Items {
+			e.Log.Info("POD: " + p.Name)
+		}
+	}
 
 	return nil
 }
