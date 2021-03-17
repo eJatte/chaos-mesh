@@ -1,0 +1,110 @@
+Archive:
+{
+    "uid": "fc72da4c-a8dc-44cc-91d8-af9334cd27f3",
+    "kind": "SecurityChaos",
+    "namespace": "chaos-testing",
+    "name": "security-chaos-list-secrets",
+    "action": "list-secrets",
+    "start_time": "2021-03-17T12:24:08Z",
+    "finish_time": "2021-03-17T12:28:19.894511601Z"
+}
+
+Experiment:
+apiVersion: chaos-mesh.org/v1alpha1
+kind: SecurityChaos
+metadata:
+  name: security-chaos-list-secrets
+  namespace: chaos-testing
+spec:
+  action: list-secrets
+  namespace: "default"
+  user: "orion"
+  scheduler:
+    cron: "@every 1m"
+
+Results:
+{
+    "id": 6,
+    "created_at": "2021-03-17T12:24:09.24041454Z",
+    "updated_at": "2021-03-17T12:24:09.248257097Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-list-secrets",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "list-secrets",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-17T12:24:08Z",
+    "finish_time": "2021-03-17T12:24:09Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "fc72da4c-a8dc-44cc-91d8-af9334cd27f3"
+},
+{
+    "id": 7,
+    "created_at": "2021-03-17T12:25:08.517065046Z",
+    "updated_at": "2021-03-17T12:25:08.525218667Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-list-secrets",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "list-secrets",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-17T12:25:08Z",
+    "finish_time": "2021-03-17T12:25:08Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "fc72da4c-a8dc-44cc-91d8-af9334cd27f3"
+},
+{
+    "id": 8,
+    "created_at": "2021-03-17T12:26:08.520294177Z",
+    "updated_at": "2021-03-17T12:26:08.527305924Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-list-secrets",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "list-secrets",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-17T12:26:08Z",
+    "finish_time": "2021-03-17T12:26:08Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "fc72da4c-a8dc-44cc-91d8-af9334cd27f3"
+},
+{
+    "id": 9,
+    "created_at": "2021-03-17T12:27:08.519617624Z",
+    "updated_at": "2021-03-17T12:27:08.527787036Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-list-secrets",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "list-secrets",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-17T12:27:08Z",
+    "finish_time": "2021-03-17T12:27:08Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "fc72da4c-a8dc-44cc-91d8-af9334cd27f3"
+},
+{
+    "id": 10,
+    "created_at": "2021-03-17T12:28:08.52172275Z",
+    "updated_at": "2021-03-17T12:28:08.53074022Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-list-secrets",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "list-secrets",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-17T12:28:08Z",
+    "finish_time": "2021-03-17T12:28:08Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "fc72da4c-a8dc-44cc-91d8-af9334cd27f3"
+}
