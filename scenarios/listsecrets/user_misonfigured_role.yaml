@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: get-secrets-role
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: get-secrets
+  namespace: default
+subjects:
+- kind: User
+  name: orion
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: get-secrets-role
+  apiGroup: rbac.authorization.k8s.io
