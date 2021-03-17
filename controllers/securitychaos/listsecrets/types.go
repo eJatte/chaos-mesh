@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	cm "github.com/chaos-mesh/chaos-mesh/pkg/chaosctl/common"
-	"net/http"
-	"strconv"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"net/http"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/events"
@@ -41,35 +39,38 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
-	secretReq := clientSet.KubeCli.CoreV1().RESTClient().Get().
+	user := securitychaos.Spec.User
+	namespace := securitychaos.Spec.NameSpace
+
+	res := clientSet.KubeCli.CoreV1().RESTClient().Get().
 		Resource("secrets").
-		Namespace("default").
-		SetHeader("Impersonate-User", "orion")
-
-	e.Log.Info("Attempting to execute request with URL: " + secretReq.URL().String())
-
-	res := secretReq.Do()
+		Namespace(namespace).
+		SetHeader("Impersonate-User", user).
+		Do()
 
 	var statusCode int
-
 	res.StatusCode(&statusCode)
+	_, err = res.Get()
 
-	resObject, err := res.Get()
+	if statusCode == http.StatusForbidden {
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
+		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
 
-	e.Log.Info("Status: " + strconv.Itoa(statusCode))
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered,
+			"Could not list secrets as user="+user+" in namespace="+namespace+". Attack failed.")
+	} else if statusCode == http.StatusOK {
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
+		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
 
-	if statusCode != http.StatusOK {
-		e.Log.Info("COULD NOT GET SECRETS")
-		if err != nil {
-			e.Log.Error(err, "Error when getting secrets")
-		}
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered,
+			"Could list secrets as user="+user+" in namespace="+namespace+". Attack succeeded.")
 	} else {
-		e.Log.Info("COULD GET SECRETS")
-		var secrets = resObject.(*v1.SecretList)
-
-		for _, secret := range secrets.Items {
-			e.Log.Info("SECRET: " + secret.Name)
+		msg := "failed when listing secrets"
+		if err == nil {
+			err = errors.New(msg)
 		}
+		e.Log.Error(err, msg)
+		return err
 	}
 
 	return nil

@@ -88,6 +88,10 @@ type SecurityChaosSpec struct {
 	// GID specifies the gid to use in the experiment, needed in delete file experiment.
 	// +optional
 	GID int64 `json:"gid"`
+
+	// User specifies a kubernetes user. Used in the list secrets experiment.
+	// +optional
+	User string `json:"user"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos

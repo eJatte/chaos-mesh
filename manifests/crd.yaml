@@ -3316,6 +3316,10 @@ spec:
                 in delete file experiment.
               format: int64
               type: integer
+            user:
+              description: User specifies a kubernetes user. Used in the list secrets
+                experiment.
+              type: string
             value:
               description: Value is required when the mode is set to `FixedPodMode`
                 / `FixedPercentPodMod` / `RandomMaxPercentPodMod`. If `FixedPodMode`,
