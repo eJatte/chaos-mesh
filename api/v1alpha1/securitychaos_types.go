@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -24,6 +25,8 @@ const (
 	RunAsRootAction SecurityChaosAction = "run-as-root"
 	// RunAsPrivilegedAction represents the chaos action of creating a privileged container.
 	RunAsPrivilegedAction SecurityChaosAction = "run-as-privileged"
+	// CreatePodAction represents the chaos action of creating a pod.
+	CreatePodAction SecurityChaosAction = "create-pod"
 	// DeleteFileAction represents the chaos action of attempting to delete a file that should not be deletable.
 	DeleteFileAction SecurityChaosAction = "delete-file"
 	// ListSecretsAction represents the chaos action of attempting to list secrets
@@ -51,9 +54,9 @@ type SecurityChaosSpec struct {
 	Scheduler *SchedulerSpec `json:"scheduler,omitempty"`
 
 	// Action defines the specific security chaos action.
-	// Supported action: run-as-root / run-as-privileged / delete-file / list-secrets / test
+	// Supported action: run-as-root / run-as-privileged / delete-file / list-secrets / create-pod / test
 	// Default action: run-as-root
-	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;delete-file;list-secrets;test
+	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;delete-file;list-secrets;create-pod;test;
 	Action SecurityChaosAction `json:"action"`
 
 	// NameSpace defines the namespace that the chaos experiment should be applied in.
@@ -92,6 +95,14 @@ type SecurityChaosSpec struct {
 	// User specifies a kubernetes user. Used in the list secrets experiment.
 	// +optional
 	User string `json:"user"`
+
+	// PodSecurityContext specifies a pod security contex, used in the create-pod experiment
+	// +optional
+	PodSecurityContext v1.PodSecurityContext `json:"podsecuritycontext"`
+
+	// SecurityContext specifies a security contex, used in the create-pod experiment
+	// +optional
+	SecurityContext v1.SecurityContext `json:"securitycontext"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos

@@ -1,0 +1,14 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: SecurityChaos
+metadata:
+  name: security-chaos-create-privileged-pod
+  namespace: chaos-testing
+spec:
+  action: create-pod
+  podsecuritycontext:
+    runAsUser: 1000
+  securitycontext:
+    privileged: true
+  namespace: default
+  scheduler:
+    cron: "@every 1m"
