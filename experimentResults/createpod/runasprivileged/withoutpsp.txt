@@ -1,0 +1,112 @@
+Archive:
+{
+    "uid": "14f161ae-53e4-41ce-95c4-f724f5070ad5",
+    "kind": "SecurityChaos",
+    "namespace": "chaos-testing",
+    "name": "security-chaos-create-privileged-pod",
+    "action": "create-pod",
+    "start_time": "2021-03-18T13:13:45Z",
+    "finish_time": "2021-03-18T13:18:58.259511479Z"
+}
+Experiment:
+apiVersion: chaos-mesh.org/v1alpha1
+kind: SecurityChaos
+metadata:
+  name: security-chaos-create-privileged-pod
+  namespace: chaos-testing
+spec:
+  action: create-pod
+  podsecuritycontext:
+    runAsUser: 1000
+  securitycontext:
+    privileged: true
+  namespace: default
+  scheduler:
+    cron: "@every 1m"
+
+Results:
+{
+        "id": 6,
+        "created_at": "2021-03-18T13:13:45.998493775Z",
+        "updated_at": "2021-03-18T13:13:46.009395294Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-create-privileged-pod",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "create-pod",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-18T13:13:45Z",
+        "finish_time": "2021-03-18T13:13:45Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "14f161ae-53e4-41ce-95c4-f724f5070ad5"
+    },
+    {
+        "id": 7,
+        "created_at": "2021-03-18T13:14:45.02512817Z",
+        "updated_at": "2021-03-18T13:14:45.034431588Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-create-privileged-pod",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "create-pod",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-18T13:14:45Z",
+        "finish_time": "2021-03-18T13:14:45Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "14f161ae-53e4-41ce-95c4-f724f5070ad5"
+    },
+    {
+        "id": 8,
+        "created_at": "2021-03-18T13:15:45.038391005Z",
+        "updated_at": "2021-03-18T13:15:45.048251527Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-create-privileged-pod",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "create-pod",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-18T13:15:45Z",
+        "finish_time": "2021-03-18T13:15:45Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "14f161ae-53e4-41ce-95c4-f724f5070ad5"
+    },
+    {
+        "id": 9,
+        "created_at": "2021-03-18T13:16:45.045021085Z",
+        "updated_at": "2021-03-18T13:16:45.0528177Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-create-privileged-pod",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "create-pod",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-18T13:16:45Z",
+        "finish_time": "2021-03-18T13:16:45Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "14f161ae-53e4-41ce-95c4-f724f5070ad5"
+    },
+    {
+        "id": 10,
+        "created_at": "2021-03-18T13:17:45.044613992Z",
+        "updated_at": "2021-03-18T13:17:45.053965874Z",
+        "deleted_at": null,
+        "experiment": "security-chaos-create-privileged-pod",
+        "namespace": "chaos-testing",
+        "kind": "SecurityChaos",
+        "action": "create-pod",
+        "message": "ATTACK_SUCCEEDED",
+        "failed_message": "",
+        "start_time": "2021-03-18T13:17:45Z",
+        "finish_time": "2021-03-18T13:17:45Z",
+        "duration": "",
+        "pods": [],
+        "experiment_id": "14f161ae-53e4-41ce-95c4-f724f5070ad5"
+    }
