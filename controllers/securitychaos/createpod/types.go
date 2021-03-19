@@ -1,20 +1,22 @@
 package createpod
 
 import (
-"context"
-"errors"
+	"context"
+	"errors"
+	cm "github.com/chaos-mesh/chaos-mesh/pkg/chaosctl/common"
+	"net/http"
 
-v1 "k8s.io/api/core/v1"
-metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-"k8s.io/apimachinery/pkg/runtime"
-ctrl "sigs.k8s.io/controller-runtime"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 
-"github.com/chaos-mesh/chaos-mesh/pkg/events"
+	"github.com/chaos-mesh/chaos-mesh/pkg/events"
 
-"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-"github.com/chaos-mesh/chaos-mesh/pkg/router"
-ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
-end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+	"github.com/chaos-mesh/chaos-mesh/pkg/router"
+	ctx "github.com/chaos-mesh/chaos-mesh/pkg/router/context"
+	end "github.com/chaos-mesh/chaos-mesh/pkg/router/endpoint"
 )
 
 type endpoint struct {
@@ -51,20 +53,49 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 			SecurityContext: &securitychaos.Spec.PodSecurityContext,
 			Containers: []v1.Container{
 				{
-					Name:  "create-pod",
-					Image: "busybox",
+					Name:            "create-pod",
+					Image:           "busybox",
 					SecurityContext: &securitychaos.Spec.SecurityContext,
 				},
 			},
 		},
 	}
 
-	err := e.Create(ctx, &pod)
+	clientSet, err := cm.InitClientSet()
 	if err != nil {
-		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
-		securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+		e.Log.Error(err, "Failed to init a client set")
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to init a client set")
+		return err
+	}
 
-		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to create pod with specified security context. Attack failed.")
+	user := securitychaos.Spec.User
+
+	request := clientSet.KubeCli.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Namespace(namespace).
+		Body(&pod)
+
+	if len(user) > 0 {
+		request = request.SetHeader("Impersonate-User", user)
+	}
+
+	res := request.Do()
+
+	var statusCode int
+	res.StatusCode(&statusCode)
+	_, err = res.Get()
+
+	if statusCode != http.StatusCreated {
+		if statusCode == http.StatusForbidden {
+			securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
+			securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+			e.Log.Error(err, "Failed to create pod")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to create pod with specified security context. Attack failed.")
+		} else if err != nil {
+			e.Log.Error(err, "Failed to create pod")
+			e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjectFailed, "Failed to create pod")
+			return err
+		}
 	} else {
 		err = e.Delete(ctx, &pod)
 		if err != nil {
