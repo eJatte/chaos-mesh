@@ -31,6 +31,8 @@ const (
 	DeleteFileAction SecurityChaosAction = "delete-file"
 	// ListSecretsAction represents the chaos action of attempting to list secrets
 	ListSecretsAction SecurityChaosAction = "list-secrets"
+	// KubeletAPIAction represents the chaos action of attempting to access the kubelet api
+	KubeletAPIAction SecurityChaosAction = "kubelet-api"
 	// TestAction represents the chaos action of test
 	TestAction SecurityChaosAction = "test"
 )
@@ -54,9 +56,9 @@ type SecurityChaosSpec struct {
 	Scheduler *SchedulerSpec `json:"scheduler,omitempty"`
 
 	// Action defines the specific security chaos action.
-	// Supported action: run-as-root / run-as-privileged / delete-file / list-secrets / create-pod / test
+	// Supported action: run-as-root / run-as-privileged / delete-file / list-secrets / create-pod / kubelet-api / test
 	// Default action: run-as-root
-	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;delete-file;list-secrets;create-pod;test;
+	// +kubebuilder:validation:Enum=run-as-root;run-as-privileged;delete-file;list-secrets;create-pod;kubelet-api;test;
 	Action SecurityChaosAction `json:"action"`
 
 	// NameSpace defines the namespace that the chaos experiment should be applied in.

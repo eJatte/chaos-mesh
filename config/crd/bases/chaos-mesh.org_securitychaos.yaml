@@ -39,13 +39,14 @@ spec:
             action:
               description: 'Action defines the specific security chaos action. Supported
                 action: run-as-root / run-as-privileged / delete-file / list-secrets
-                / create-pod / test Default action: run-as-root'
+                / create-pod / kubelet-api / test Default action: run-as-root'
               enum:
               - run-as-root
               - run-as-privileged
               - delete-file
               - list-secrets
               - create-pod
+              - kubelet-api
               - test
               type: string
             duration:
