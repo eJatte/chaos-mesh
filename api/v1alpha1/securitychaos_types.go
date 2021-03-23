@@ -105,6 +105,10 @@ type SecurityChaosSpec struct {
 	// SecurityContext specifies a security contex, used in the create-pod experiment
 	// +optional
 	SecurityContext v1.SecurityContext `json:"securitycontext"`
+
+	// Node specifies the name of a kubernetes node, used in the kubelet api experiment.
+	// +optional
+	Node string `json:"node"`
 }
 
 // SecurityChaosStatus represents the status of a SecurityChaos

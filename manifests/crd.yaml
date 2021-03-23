@@ -3209,6 +3209,10 @@ spec:
               description: 'NameSpace defines the namespace that the chaos experiment
                 should be applied in. Default namespace: default'
               type: string
+            node:
+              description: Node specifies the name of a kubernetes node, used in the
+                kubelet api experiment.
+              type: string
             podsecuritycontext:
               description: PodSecurityContext specifies a pod security contex, used
                 in the create-pod experiment

@@ -5,5 +5,6 @@ metadata:
   namespace: chaos-testing
 spec:
   action: kubelet-api
+  node: minikube
   scheduler:
     cron: "@every 1m"
