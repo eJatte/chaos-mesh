@@ -1,7 +1,7 @@
 apiVersion: chaos-mesh.org/v1alpha1
 kind: SecurityChaos
 metadata:
-  name: security-chaos-run-as-root
+  name: security-chaos-kubelet-api
   namespace: chaos-testing
 spec:
   action: kubelet-api

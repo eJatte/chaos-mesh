@@ -2,6 +2,7 @@ package kubeletapi
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,13 +32,18 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
-	request, err := http.NewRequest("GET", "https://localhost:10250/pods", nil)
+	request, err := http.NewRequest("GET", "https://192.168.49.2:10250/pods", nil)
+
 	if err != nil {
 		e.Log.Error(err, "Could not create request")
 		return err
 	}
 
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr}
 	resp, err := client.Do(request)
 	if resp != nil {
 		e.Log.Info("Status: " + resp.Status)
