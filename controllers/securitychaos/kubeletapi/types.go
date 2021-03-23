@@ -30,6 +30,8 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 		return err
 	}
 
+	securitychaos.Status.Experiment.Action = string(securitychaos.Spec.Action)
+
 	e.Event(securitychaos, v1.EventTypeNormal, events.ChaosInjected, "Started chaos experiment= "+" action="+string(securitychaos.Spec.Action))
 
 	request, err := http.NewRequest("GET", "https://192.168.49.2:10250/pods", nil)
@@ -45,11 +47,17 @@ func (e *endpoint) Apply(ctx context.Context, req ctrl.Request, chaos v1alpha1.I
 
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(request)
-	if resp != nil {
-		e.Log.Info("Status: " + resp.Status)
-	}
 	if err != nil {
-		e.Log.Error(err, "Could not make request")
+		e.Log.Error(err, "failed to make request")
+		return err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackSucceededMessage)
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Successfully made request to Kubelet API. Attack succeeded.")
+	} else if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		securitychaos.Status.Experiment.Message = string(v1alpha1.AttackFailedMessage)
+		e.Event(securitychaos, v1.EventTypeNormal, events.ChaosRecovered, "Failed to make request to Kubelet API. Attack failed.")
 	}
 
 	return nil
