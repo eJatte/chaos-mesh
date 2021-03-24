@@ -1,0 +1,109 @@
+Archive:
+{
+    "uid": "9035fc01-c49a-497c-997a-0f648a25a239",
+    "kind": "SecurityChaos",
+    "namespace": "chaos-testing",
+    "name": "security-chaos-kubelet-api",
+    "action": "kubelet-api",
+    "start_time": "2021-03-24T09:33:17Z",
+    "finish_time": "2021-03-24T09:37:31.175303732Z"
+}
+Specification:
+apiVersion: chaos-mesh.org/v1alpha1
+kind: SecurityChaos
+metadata:
+  name: security-chaos-kubelet-api
+  namespace: chaos-testing
+spec:
+  action: kubelet-api
+  node: minikube
+  scheduler:
+    cron: "@every 1m"
+
+Results:
+
+{
+    "id": 1,
+    "created_at": "2021-03-24T09:33:17.675378788Z",
+    "updated_at": "2021-03-24T09:33:17.684826916Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-kubelet-api",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "kubelet-api",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-24T09:33:17Z",
+    "finish_time": "2021-03-24T09:33:17Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "9035fc01-c49a-497c-997a-0f648a25a239"
+},
+{
+    "id": 2,
+    "created_at": "2021-03-24T09:34:17.521121404Z",
+    "updated_at": "2021-03-24T09:34:17.53287012Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-kubelet-api",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "kubelet-api",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-24T09:34:17Z",
+    "finish_time": "2021-03-24T09:34:17Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "9035fc01-c49a-497c-997a-0f648a25a239"
+},
+{
+    "id": 3,
+    "created_at": "2021-03-24T09:35:17.520435284Z",
+    "updated_at": "2021-03-24T09:35:17.527766484Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-kubelet-api",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "kubelet-api",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-24T09:35:17Z",
+    "finish_time": "2021-03-24T09:35:17Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "9035fc01-c49a-497c-997a-0f648a25a239"
+},
+{
+    "id": 4,
+    "created_at": "2021-03-24T09:36:17.525424735Z",
+    "updated_at": "2021-03-24T09:36:17.532797075Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-kubelet-api",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "kubelet-api",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-24T09:36:17Z",
+    "finish_time": "2021-03-24T09:36:17Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "9035fc01-c49a-497c-997a-0f648a25a239"
+},
+{
+    "id": 5,
+    "created_at": "2021-03-24T09:37:17.521017473Z",
+    "updated_at": "2021-03-24T09:37:17.527438091Z",
+    "deleted_at": null,
+    "experiment": "security-chaos-kubelet-api",
+    "namespace": "chaos-testing",
+    "kind": "SecurityChaos",
+    "action": "kubelet-api",
+    "message": "ATTACK_FAILED",
+    "failed_message": "",
+    "start_time": "2021-03-24T09:37:17Z",
+    "finish_time": "2021-03-24T09:37:17Z",
+    "duration": "",
+    "pods": [],
+    "experiment_id": "9035fc01-c49a-497c-997a-0f648a25a239"
+}
